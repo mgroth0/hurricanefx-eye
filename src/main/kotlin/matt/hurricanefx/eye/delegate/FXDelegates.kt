@@ -16,8 +16,9 @@ import javafx.beans.value.ObservableValue
 import javafx.collections.ObservableList
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lib.onChange
+import matt.json.custom.Json
+import matt.json.custom.JsonModel
 import matt.kjlib.delegate.SuperDelegate
-import matt.kjlib.delegate.SuperDelegateBase
 import matt.kjlib.delegate.SuperListDelegate
 import matt.klibexport.klibexport.go
 import java.util.WeakHashMap
@@ -150,7 +151,8 @@ abstract class FX<V, P: ObservableValue<V>>(
   ): FX<V, P> {
 	initialize(thisRef, prop.name)
 	val search = bind?.name ?: prop.name
-	SuperDelegateBase.instances[thisRef]?.get(search)?.go { d ->
+
+	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
 	  @Suppress("UNCHECKED_CAST")
 	  val setfun = d.setfun as ((V)->V)?
 
@@ -217,7 +219,7 @@ class FXList<V>(
   ): FXList<V> {
 	initialize(thisRef, prop.name)
 	val search = bind?.name ?: prop.name
-	SuperDelegateBase.instances[thisRef]?.get(search)?.go { d ->
+	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
 	  require(d.setfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d.getfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperListDelegate<*, *>)

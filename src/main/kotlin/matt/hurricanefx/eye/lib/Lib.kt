@@ -2,9 +2,23 @@ package matt.hurricanefx.eye.lib
 
 /*slightly modified code I stole from tornadofx*/
 
-import javafx.beans.property.*
-import javafx.beans.value.*
-import javafx.collections.*
+import javafx.beans.property.DoubleProperty
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.Property
+import javafx.beans.property.SimpleDoubleProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.value.ChangeListener
+import javafx.beans.value.ObservableBooleanValue
+import javafx.beans.value.ObservableDoubleValue
+import javafx.beans.value.ObservableFloatValue
+import javafx.beans.value.ObservableIntegerValue
+import javafx.beans.value.ObservableLongValue
+import javafx.beans.value.ObservableValue
+import javafx.collections.FXCollections
+import javafx.collections.ListChangeListener
+import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
+import javafx.collections.ObservableSet
 
 @Deprecated("Use `asObservable()` instead.", ReplaceWith("this.asObservable()", "tornadofx.asObservable"))
 fun <T> List<T>.observable(): ObservableList<T> = FXCollections.observableList(this)
@@ -96,6 +110,16 @@ fun ObservableDoubleValue.onChange(op: (Double)->Unit) = apply {
 fun <T> ObservableList<T>.onChange(op: (ListChangeListener.Change<out T>)->Unit) = apply {
   addListener(ListChangeListener { op(it) })
 }
+
+fun <T> ObservableList<T>.onChangeSafe(op: ()->Unit) = apply {
+  onChange {
+	/*"ListChangeListener.Change requires you to call next() before the other methods"*/
+	while (it.next()) {
+	}
+	op()
+  }
+}
+
 
 /**
  * Create a proxy property backed by calculated data based on a specific property. The setter
