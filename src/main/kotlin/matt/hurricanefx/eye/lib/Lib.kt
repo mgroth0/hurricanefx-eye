@@ -87,7 +87,7 @@ fun <T> ObservableValue<T>.whenNotNull(op: (T)->Unit) {
 fun <T> ObservableValue<T>.onChangeOnce(op: (T?)->Unit) = onChangeTimes(1, op)
 
 fun <T> ObservableValue<T>.onChange(op: (T?)->Unit) = apply { addListener { _, _, newValue -> op(newValue) } }
-fun <T> ObservableValue<T>.onNonNullChange(op: (T)->Unit) = apply {
+fun <T: Any> ObservableValue<T?>.onNonNullChange(op: (T)->Unit) = apply {
   addListener { _, _, newValue -> if (newValue != null) op(newValue) }
 }
 
