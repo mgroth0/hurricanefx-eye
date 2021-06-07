@@ -152,46 +152,7 @@ abstract class FX<V, P: ObservableValue<V>>(
 	initialize(thisRef, prop.name)
 	val search = bind?.name ?: prop.name
 
-	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
-	  @Suppress("UNCHECKED_CAST")
-	  val setfun = d.setfun as ((V)->V)?
-
-	  @Suppress("UNCHECKED_CAST")
-	  val getfun = d.getfun as ((V)->V)?
-	  require(getfun == null) {
-		"need more dev. getfun currently doesnt work in fx prop. would need a lot more work, powerful property delegates"
-	  }
-	  require(d is SuperDelegate<*, *>)
-	  if (d.was_set) {
-		@Suppress("UNCHECKED_CAST")
-		fxProp.set(d.get() as V?)
-	  }
-	  var sending = false
-	  fxProp.onChange {
-		sending = true
-		d.set(it)
-		sending = false
-		if (setfun != null) {
-		  require(it != null) {
-			"need more dev to specify which props are nullable (I think I did the json side but not yet the FX side)"
-		  }
-		  @Suppress("UNCHECKED_CAST")
-		  val s = setfun(it as V)
-		  if (s != it) {
-			fxProp.set(s)
-		  }
-		}
-	  }
-	  d.onChange {
-		if (!sending) {
-		  @Suppress("UNCHECKED_CAST")
-		  if (fxProp.get() != it as V?) { /*might have reloaded json*/
-			@Suppress("UNCHECKED_CAST")
-			fxProp.set(it as V?)
-		  }
-		}
-	  }
-	}
+	fxProp.bindToJsonProp(o = thisRef, prop = search)
 	return this
   }
 
@@ -206,6 +167,51 @@ abstract class FX<V, P: ObservableValue<V>>(
 	}
   }
 }
+
+
+fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
+  ((o as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == prop }?.d?.go { d ->
+	@Suppress("UNCHECKED_CAST")
+	val setfun = d.setfun as ((V)->V)?
+
+	@Suppress("UNCHECKED_CAST")
+	val getfun = d.getfun as ((V)->V)?
+	require(getfun == null) {
+	  "need more dev. getfun currently doesnt work in fx prop. would need a lot more work, powerful property delegates"
+	}
+	require(d is SuperDelegate<*, *>)
+	if (d.was_set) {
+	  @Suppress("UNCHECKED_CAST")
+	  set(d.get() as V?)
+	}
+	var sending = false
+	onChange {
+	  sending = true
+	  d.set(it)
+	  sending = false
+	  if (setfun != null) {
+		require(it != null) {
+		  "need more dev to specify which props are nullable (I think I did the json side but not yet the FX side)"
+		}
+		@Suppress("UNCHECKED_CAST")
+		val s = setfun(it as V)
+		if (s != it) {
+		  set(s)
+		}
+	  }
+	}
+	d.onChange {
+	  if (!sending) {
+		@Suppress("UNCHECKED_CAST")
+		if (get() != it as V?) { /*might have reloaded json*/
+		  @Suppress("UNCHECKED_CAST")
+		  set(it as V?)
+		}
+	  }
+	}
+  }
+}
+
 
 @ExperimentalContracts
 class FXList<V>(
