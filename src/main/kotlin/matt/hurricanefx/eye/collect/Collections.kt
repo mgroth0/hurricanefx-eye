@@ -8,10 +8,21 @@ import javafx.beans.Observable
 import javafx.beans.WeakListener
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
-import javafx.collections.*
+import javafx.collections.FXCollections
+import javafx.collections.ListChangeListener
+import javafx.collections.MapChangeListener
+import javafx.collections.ObservableFloatArray
+import javafx.collections.ObservableIntegerArray
+import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
+import javafx.collections.ObservableSet
+import javafx.collections.SetChangeListener
+import matt.kjlib.str.taball
 import matt.klibexport.klibexport.setAll
 import java.lang.ref.WeakReference
-import java.util.*
+import java.util.Collections
+import java.util.Random
+import java.util.WeakHashMap
 
 /**
  * Returns an empty new [ObservableIntegerArray].
@@ -529,19 +540,25 @@ class ListConversionListener<SourceType, TargetType>(
   internal val targetRef: WeakReference<MutableList<TargetType>> = WeakReference(targetList)
 
   override fun onChanged(change: ListChangeListener.Change<out SourceType>) {
-	//        println("INTERNAL ListConversionListener CHANGE")
+	  println("INTERNAL ListConversionListener CHANGE")
 	val list = targetRef.get()
 	if (list == null) {
 	  change.list.removeListener(this)
 	} else {
 	  while (change.next()) {
 		if (change.wasPermutated()) {
+		  println("PERMUTE")
 		  list.subList(change.from, change.to).clear()
 		  list.addAll(change.from, change.list.subList(change.from, change.to).map(converter))
 		} else {
+		  println("RESET ALL")
+		  taball("change.addedSubList",change.addedSubList)
+		  taball("change.removed",change.removed)
 
 		  /*matt was here*/
+		  /*change.list.removeListener(this)*/
 		  list.setAll(change.list.map(converter))
+		  /*change.list.addListener(this)*/
 
 		  /*nice try tornadofx, but this causes a stupid index out of bounds error*/
 		  /* if (change.wasRemoved()) {

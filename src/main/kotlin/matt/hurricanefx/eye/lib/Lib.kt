@@ -19,6 +19,8 @@ import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
+import matt.kjlib.str.taball
+import kotlin.system.exitProcess
 
 @Deprecated("Use `asObservable()` instead.", ReplaceWith("this.asObservable()", "tornadofx.asObservable"))
 fun <T> List<T>.observable(): ObservableList<T> = FXCollections.observableList(this)
@@ -111,10 +113,19 @@ fun <T> ObservableList<T>.onChange(op: (ListChangeListener.Change<out T>)->Unit)
   addListener(ListChangeListener { op(it) })
 }
 
-fun <T> ObservableList<T>.onChangeSafe(op: ()->Unit) = apply {
+fun <T> ObservableList<T>.onChangeSafe(
+  debug: Boolean = false,
+  op: ()->Unit
+) = apply {
   onChange {
 	/*"ListChangeListener.Change requires you to call next() before the other methods"*/
 	while (it.next()) {
+	  if (debug) {
+		taball("change.added", it.addedSubList)
+		taball("change.removed", it.removed)
+		println("change.wasPermutated\t${it.wasPermutated()}")
+		exitProcess(0)
+	  }
 	}
 	op()
   }
