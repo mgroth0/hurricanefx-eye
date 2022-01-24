@@ -540,20 +540,20 @@ class ListConversionListener<SourceType, TargetType>(
   internal val targetRef: WeakReference<MutableList<TargetType>> = WeakReference(targetList)
 
   override fun onChanged(change: ListChangeListener.Change<out SourceType>) {
-	  println("INTERNAL ListConversionListener CHANGE")
+	  /*println("INTERNAL ListConversionListener CHANGE")*/
 	val list = targetRef.get()
 	if (list == null) {
 	  change.list.removeListener(this)
 	} else {
 	  while (change.next()) {
 		if (change.wasPermutated()) {
-		  println("PERMUTE")
+		  /*println("PERMUTE")*/
 		  list.subList(change.from, change.to).clear()
 		  list.addAll(change.from, change.list.subList(change.from, change.to).map(converter))
 		} else {
-		  println("RESET ALL")
+		  /*println("RESET ALL")
 		  taball("change.addedSubList",change.addedSubList)
-		  taball("change.removed",change.removed)
+		  taball("change.removed",change.removed)*/
 
 		  /*matt was here*/
 		  /*change.list.removeListener(this)*/

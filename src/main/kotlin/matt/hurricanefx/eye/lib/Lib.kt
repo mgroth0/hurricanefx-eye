@@ -121,9 +121,9 @@ fun <T> ObservableList<T>.onChangeSafe(
 	/*"ListChangeListener.Change requires you to call next() before the other methods"*/
 	while (it.next()) {
 	  if (debug) {
-		taball("change.added", it.addedSubList)
+		/*taball("change.added", it.addedSubList)
 		taball("change.removed", it.removed)
-		println("change.wasPermutated\t${it.wasPermutated()}")
+		println("change.wasPermutated\t${it.wasPermutated()}")*/
 		exitProcess(0)
 	  }
 	}
