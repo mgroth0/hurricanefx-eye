@@ -15,6 +15,7 @@ import javafx.beans.property.StringProperty
 import javafx.beans.value.ObservableValue
 import javafx.collections.ObservableList
 import matt.hurricanefx.eye.collect.toObservable
+import matt.hurricanefx.eye.lang.listen
 import matt.hurricanefx.eye.lib.onChange
 import matt.json.custom.Json
 import matt.json.custom.JsonModel
@@ -262,5 +263,11 @@ class FXList<V>(
 	  op()
 	}
   }
+
+  fun listen(onAdd: (V) -> Unit, onRemove: (V) -> Unit) {
+	fxProp.listen(onAdd,onRemove)
+  }
+
+
 
 }
