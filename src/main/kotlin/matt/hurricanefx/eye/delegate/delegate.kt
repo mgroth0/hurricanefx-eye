@@ -44,7 +44,6 @@ abstract class FXDelegateBase {
   abstract fun onChange(op: ()->Unit)
 }
 
-@ExperimentalContracts
 class FXB(
   default: Boolean? = null,
   bind: KProperty<*>? = null
@@ -58,7 +57,6 @@ class FXB(
   }
 }
 
-@ExperimentalContracts
 class FXI(
   default: Int? = null,
   bind: KProperty<*>? = null
@@ -72,7 +70,6 @@ class FXI(
   }
 }
 
-@ExperimentalContracts
 class FXS(
   default: String? = null,
   bind: KProperty<*>? = null
@@ -86,7 +83,6 @@ class FXS(
   }
 }
 
-@ExperimentalContracts
 class FXL(
   default: Long? = null,
   bind: KProperty<*>? = null
@@ -100,7 +96,6 @@ class FXL(
   }
 }
 
-@ExperimentalContracts
 class FXD(
   default: Double? = null,
   bind: KProperty<*>? = null
@@ -114,7 +109,6 @@ class FXD(
   }
 }
 
-@ExperimentalContracts
 class FXO<V>(
   default: V? = null,
   bind: KProperty<*>? = null
@@ -127,7 +121,6 @@ class FXO<V>(
   }
 }
 
-@ExperimentalContracts
 class FXE<V: Enum<V>>(
   default: V? = null,
   bind: KProperty<*>? = null
@@ -140,7 +133,6 @@ class FXE<V: Enum<V>>(
   }
 }
 
-@ExperimentalContracts
 abstract class FX<V, P: ObservableValue<V>>(
   default: V? = null,
   val bind: KProperty<*>? = null
@@ -214,7 +206,6 @@ fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
 }
 
 
-@ExperimentalContracts
 class FXList<V>(
   vararg default: V,
   val bind: KProperty<*>? = null
