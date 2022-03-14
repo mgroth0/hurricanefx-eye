@@ -19,6 +19,7 @@ import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
+import javafx.collections.SetChangeListener
 import matt.kjlib.str.taball
 import kotlin.system.exitProcess
 
@@ -111,6 +112,10 @@ fun ObservableDoubleValue.onChange(op: (Double)->Unit) = apply {
 
 fun <T> ObservableList<T>.onChange(op: (ListChangeListener.Change<out T>)->Unit) = apply {
   addListener(ListChangeListener { op(it) })
+}
+
+fun <T> ObservableSet<T>.onChange(op: (SetChangeListener.Change<out T>)->Unit) = apply {
+	addListener(SetChangeListener { op(it) })
 }
 
 fun <T> ObservableList<T>.onChangeSafe(
