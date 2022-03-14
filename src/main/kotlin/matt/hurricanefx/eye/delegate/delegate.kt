@@ -14,6 +14,7 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.beans.value.ObservableValue
 import javafx.collections.ObservableList
+import javafx.collections.ObservableSet
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lang.listen
 import matt.hurricanefx.eye.lib.onChange
@@ -21,7 +22,9 @@ import matt.json.custom.Json
 import matt.json.custom.JsonModel
 import matt.kjlib.delegate.SuperDelegate
 import matt.kjlib.delegate.SuperListDelegate
+import matt.kjlib.delegate.SuperSetDelegate
 import matt.klibexport.klibexport.go
+import matt.klibexport.klibexport.setAll
 import java.util.WeakHashMap
 import kotlin.contracts.ExperimentalContracts
 import kotlin.reflect.KProperty
@@ -258,6 +261,67 @@ class FXList<V>(
   fun listen(onAdd: (V) -> Unit, onRemove: (V) -> Unit) {
 	fxProp.listen(onAdd,onRemove)
   }
+
+
+
+}
+
+
+
+
+
+class FXSet<V>(
+	vararg default: V,
+	val bind: KProperty<*>? = null
+): FXDelegateBase() {
+	private val fxProp = default.toSet().toObservable()
+	operator fun provideDelegate(
+		thisRef: Any,
+		prop: KProperty<*>
+	): FXSet<V> {
+		initialize(thisRef, prop.name)
+		val search = bind?.name ?: prop.name
+		((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
+			require(d.setfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
+			require(d.getfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
+			require(d is SuperSetDelegate<*, *>)
+			if (d.was_set) {
+				@Suppress("UNCHECKED_CAST")
+				fxProp.setAll(d.get() as List<V>)
+			}
+			var sending = false
+			fxProp.onChange {
+				sending = true
+				d.setAll(fxProp.toList())
+				sending = false
+			}
+			d.onChange {
+				require(it is List<*>)
+				if (!sending) {
+					@Suppress("UNCHECKED_CAST")
+					fxProp.setAll(it as List<V>)
+				}
+			}
+		}
+		return this
+	}
+
+	operator fun getValue(
+		thisRef: Any,
+		property: KProperty<*>
+	): ObservableSet<V> {
+		return fxProp
+	}
+
+	override fun onChange(op: ()->Unit) {
+		fxProp.onChange {
+			op()
+		}
+	}
+
+	fun listen(onAdd: (V) -> Unit, onRemove: (V) -> Unit) {
+		fxProp.listen(onAdd,onRemove)
+	}
 
 
 

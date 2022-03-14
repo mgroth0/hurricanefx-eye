@@ -3,6 +3,7 @@ package matt.hurricanefx.eye.lang
 
 import javafx.beans.property.*
 import javafx.collections.ObservableList
+import javafx.collections.ObservableSet
 import matt.hurricanefx.eye.lib.onChange
 
 
@@ -33,4 +34,17 @@ fun <E> ObservableList<E>.listen(
 	  }
 	}
   }
+}
+fun <E> ObservableSet<E>.listen(
+	onAdd: ((E)->Unit),
+	onRemove: ((E)->Unit),
+) {
+	onChange { c ->
+		if (c.wasAdded()) {
+			onAdd(c.elementAdded)
+		}
+		if (c.wasRemoved()) { /*I'm not sure if its possible for one of these changes to have an add AND a remove. Probably not, but just being safe here.*/
+			onRemove(c.elementRemoved)
+		}
+	}
 }
