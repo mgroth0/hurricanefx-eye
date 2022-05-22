@@ -34,7 +34,7 @@ fun <K, V> Map<K, V>.observable(): ObservableMap<K, V> = FXCollections.observabl
 
 
 inline fun <T> ChangeListener(crossinline listener: (observable: ObservableValue<out T>?, oldValue: T, newValue: T)->Unit): ChangeListener<T> =
-	javafx.beans.value.ChangeListener<T> { observable, oldValue, newValue -> listener(observable, oldValue, newValue) }
+  javafx.beans.value.ChangeListener<T> { observable, oldValue, newValue -> listener(observable, oldValue, newValue) }
 
 /**
  * Listen for changes to this observable. Optionally only listen x times.
@@ -97,7 +97,9 @@ fun <T: Any> ObservableValue<T?>.onNonNullChange(op: (T)->Unit) = apply {
 
 /*MATT: I HAD THEM ALL AS NON-NULL FOR A LONG TIME. BUT THEN EVENTUALLY I GOT THIS WEIRD ANNOYING EXCEPTION DEEP IN AN FX THREAD WHERE A FOCUSED PROPERTY CHANGE WAS CAUSING A NULL POINTER EXCEPTION. I AM A STRONG HUBCH IT IS BECAUSE KOTLIN ENFORCED IT AS BEING NON NULL HERE*/
 /*POSSIBLE SOLUTION: MAKE THIS ALL NULLABLE BUT ADD A LINE OF CODE THROWING AN EXCEPTION HERE IF IT TURNS OUT TO BE NULL. THAT WAY AN EXCEPTION IS THROWN IN MY OWN CODE.*/
-fun ObservableBooleanValue.onChange(op: (Boolean?)->Unit) = apply { addListener { _, _, new -> op(new ?: false) } }
+fun ObservableBooleanValue.onChange(op: (Boolean)->Unit) = apply { addListener { _, _, new: Boolean? -> {
+  op (new ?: false)
+} } }
 
 fun ObservableIntegerValue.onChange(op: (Int)->Unit) = apply { addListener { _, _, new -> op((new ?: 0).toInt()) } }
 fun ObservableLongValue.onChange(op: (Long)->Unit) = apply { addListener { _, _, new -> op((new ?: 0L).toLong()) } }
@@ -118,7 +120,7 @@ fun <T> ObservableList<T>.onChange(op: (ListChangeListener.Change<out T>)->Unit)
 }
 
 fun <T> ObservableSet<T>.onChange(op: (SetChangeListener.Change<out T>)->Unit) = apply {
-	addListener(SetChangeListener { op(it) })
+  addListener(SetChangeListener { op(it) })
 }
 
 fun <T> ObservableList<T>.onChangeSafe(
@@ -146,23 +148,23 @@ fun <T> ObservableList<T>.onChangeSafe(
  * The scope of the getter and setter will be the receiver property
  */
 fun <R, T> proxyprop(receiver: Property<R>, getter: Property<R>.()->T, setter: Property<R>.(T)->R): ObjectProperty<T> =
-	object: SimpleObjectProperty<T>() {
-	  init {
-		receiver.onChange {
-		  fireValueChangedEvent()
-		}
-	  }
-
-	  override fun invalidated() {
-		receiver.value = setter(receiver, super.get())
-	  }
-
-	  override fun get() = getter.invoke(receiver)
-	  override fun set(v: T) {
-		receiver.value = setter(receiver, v)
-		super.set(v)
+  object: SimpleObjectProperty<T>() {
+	init {
+	  receiver.onChange {
+		fireValueChangedEvent()
 	  }
 	}
+
+	override fun invalidated() {
+	  receiver.value = setter(receiver, super.get())
+	}
+
+	override fun get() = getter.invoke(receiver)
+	override fun set(v: T) {
+	  receiver.value = setter(receiver, v)
+	  super.set(v)
+	}
+  }
 
 /**
  * Create a proxy double property backed by calculated data based on a specific property. The setter
