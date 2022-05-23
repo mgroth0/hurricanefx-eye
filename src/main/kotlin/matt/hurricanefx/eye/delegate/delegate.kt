@@ -1,3 +1,5 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package matt.hurricanefx.eye.delegate
 
 import javafx.beans.property.BooleanProperty
@@ -24,12 +26,10 @@ import matt.kjlib.delegate.SuperDelegate
 import matt.kjlib.delegate.SuperListDelegate
 import matt.kjlib.delegate.SuperSetDelegate
 import matt.kjlib.log.err
-import matt.kjlib.str.tab
-import matt.kjlib.str.taball
+import matt.kjlib.whileTrue
 import matt.klibexport.klibexport.go
 import matt.klibexport.klibexport.setAll
 import java.util.WeakHashMap
-import kotlin.contracts.ExperimentalContracts
 import kotlin.reflect.KProperty
 
 abstract class FXDelegateBase {
@@ -171,15 +171,15 @@ abstract class FX<V, P: ObservableValue<V>>(
 fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
   ((o as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == prop }?.d?.go { d ->
 	@Suppress("UNCHECKED_CAST")
-	val setfun = d.setfun as ((V)->V)?
+	val setFun = d.setfun as ((V)->V)?
 
 	@Suppress("UNCHECKED_CAST")
-	val getfun = d.getfun as ((V)->V)?
-	require(getfun == null) {
-	  "need more dev. getfun currently doesnt work in fx prop. would need a lot more work, powerful property delegates"
+	val getFun = d.getfun as ((V)->V)?
+	require(getFun == null) {
+	  "need more dev. getFun currently doesnt work in fx prop. would need a lot more work, powerful property delegates"
 	}
 	require(d is SuperDelegate<*, *>)
-	if (d.was_set) {
+	if (d.wasSet) {
 	  @Suppress("UNCHECKED_CAST")
 	  set(d.get() as V?)
 	}
@@ -188,12 +188,12 @@ fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
 	  sending = true
 	  d.set(it)
 	  sending = false
-	  if (setfun != null) {
+	  if (setFun != null) {
 		require(it != null) {
 		  "need more dev to specify which props are nullable (I think I did the json side but not yet the FX side)"
 		}
 		@Suppress("UNCHECKED_CAST")
-		val s = setfun(it as V)
+		val s = setFun(it as V)
 		if (s != it) {
 		  set(s)
 		}
@@ -224,10 +224,11 @@ class FXList<V>(
 	initialize(thisRef, prop.name)
 	val search = bind?.name ?: prop.name
 	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
-	  require(d.setfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
-	  require(d.getfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
+	  require(
+		d.setfun == null && d.getfun == null
+	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperListDelegate<*, *>)
-	  if (d.was_set) {
+	  if (d.wasSet) {
 		@Suppress("UNCHECKED_CAST")
 		fxProp.setAll(d.get() as List<V>)
 	  }
@@ -261,15 +262,15 @@ class FXList<V>(
 	}
   }
 
+  @Suppress("unused")
   fun afterChange(op: ()->Unit) {
 	fxProp.onChange {
-	  while (it.next()) {
-
-	  }
+	  whileTrue { it.next() }
 	  op()
 	}
   }
 
+  @Suppress("unused")
   fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) {
 	fxProp.listen(onAdd, onRemove)
   }
@@ -290,10 +291,9 @@ class FXSet<V>(
 	initialize(thisRef, prop.name)
 	val search = bind?.name ?: prop.name
 	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
-	  require(d.setfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
-	  require(d.getfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
+	  require(d.setfun == null && d.getfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperSetDelegate<*, *>)
-	  if (d.was_set) {
+	  if (d.wasSet) {
 		@Suppress("UNCHECKED_CAST")
 		fxProp.setAll(d.get() as Set<V>)
 	  }
@@ -330,6 +330,7 @@ class FXSet<V>(
 		if (!sending) {
 		  @Suppress("UNCHECKED_CAST")
 		  sendingToFxProp = true
+		  @Suppress("UNCHECKED_CAST")
 		  fxProp.setAll(it as Set<V>)
 		  sendingToFxProp = false
 		}
@@ -350,6 +351,7 @@ class FXSet<V>(
 	err(
 	  "onChange is broken for sets :( and no, you cant just listen. Issue is that the listener is run BEFORE the actual change which is not what is ever expected"
 	)
+	@Suppress("UNREACHABLE_CODE")
 	fxProp.onChange {
 	  op()
 
@@ -359,6 +361,7 @@ class FXSet<V>(
 	  op() }, { op() })*/
   }
 
+  @Suppress("unused")
   fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) {
 	fxProp.listen(onAdd, onRemove)
   }

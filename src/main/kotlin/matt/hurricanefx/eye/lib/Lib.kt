@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package matt.hurricanefx.eye.lib
 
 /*slightly modified code I stole from tornadofx*/
@@ -20,7 +22,6 @@ import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import javafx.collections.SetChangeListener
-import matt.kjlib.str.taball
 import kotlin.system.exitProcess
 
 @Deprecated("Use `asObservable()` instead.", ReplaceWith("this.asObservable()", "tornadofx.asObservable"))
@@ -33,6 +34,7 @@ fun <T> Set<T>.observable(): ObservableSet<T> = FXCollections.observableSet(this
 fun <K, V> Map<K, V>.observable(): ObservableMap<K, V> = FXCollections.observableMap(this)
 
 
+@Suppress("FunctionName")
 inline fun <T> ChangeListener(crossinline listener: (observable: ObservableValue<out T>?, oldValue: T, newValue: T)->Unit): ChangeListener<T> =
   javafx.beans.value.ChangeListener<T> { observable, oldValue, newValue -> listener(observable, oldValue, newValue) }
 
@@ -97,9 +99,11 @@ fun <T: Any> ObservableValue<T?>.onNonNullChange(op: (T)->Unit) = apply {
 
 /*MATT: I HAD THEM ALL AS NON-NULL FOR A LONG TIME. BUT THEN EVENTUALLY I GOT THIS WEIRD ANNOYING EXCEPTION DEEP IN AN FX THREAD WHERE A FOCUSED PROPERTY CHANGE WAS CAUSING A NULL POINTER EXCEPTION. I AM A STRONG HUBCH IT IS BECAUSE KOTLIN ENFORCED IT AS BEING NON NULL HERE*/
 /*POSSIBLE SOLUTION: MAKE THIS ALL NULLABLE BUT ADD A LINE OF CODE THROWING AN EXCEPTION HERE IF IT TURNS OUT TO BE NULL. THAT WAY AN EXCEPTION IS THROWN IN MY OWN CODE.*/
-fun ObservableBooleanValue.onChange(op: (Boolean)->Unit) = apply { addListener { _, _, new: Boolean? -> {
-  op (new ?: false)
-} } }
+fun ObservableBooleanValue.onChange(op: (Boolean)->Unit) = apply {
+  addListener { _, _, new: Boolean? ->
+	op(new ?: false)
+  }
+}
 
 fun ObservableIntegerValue.onChange(op: (Int)->Unit) = apply { addListener { _, _, new -> op((new ?: 0).toInt()) } }
 fun ObservableLongValue.onChange(op: (Long)->Unit) = apply { addListener { _, _, new -> op((new ?: 0L).toLong()) } }
