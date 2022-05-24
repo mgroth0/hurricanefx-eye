@@ -54,7 +54,7 @@ class FXB(
   default: Boolean? = null,
   bind: KProperty<*>? = null
 ): FX<Boolean, BooleanProperty>(default, bind) {
-  val boolProp = SimpleBooleanProperty().apply { bindBidirectional(fxProp) }
+  val boolProp by lazy { SimpleBooleanProperty().apply { bindBidirectional(fxProp) } }
   override operator fun getValue(
 	thisRef: Any,
 	property: KProperty<*>
@@ -67,7 +67,7 @@ class FXI(
   default: Int? = null,
   bind: KProperty<*>? = null
 ): FX<Number, IntegerProperty>(default, bind) {
-  val intProp = SimpleIntegerProperty().apply { bindBidirectional(fxProp) }
+  val intProp by lazy { SimpleIntegerProperty().apply { bindBidirectional(fxProp) } }
   override operator fun getValue(
 	thisRef: Any,
 	property: KProperty<*>
@@ -80,7 +80,7 @@ class FXS(
   default: String? = null,
   bind: KProperty<*>? = null
 ): FX<String, StringProperty>(default, bind) {
-  val stringProp = SimpleStringProperty().apply { bindBidirectional(fxProp) }
+  val stringProp by lazy { SimpleStringProperty().apply { bindBidirectional(fxProp) } }
   override operator fun getValue(
 	thisRef: Any,
 	property: KProperty<*>
@@ -93,7 +93,7 @@ class FXL(
   default: Long? = null,
   bind: KProperty<*>? = null
 ): FX<Number, LongProperty>(default, bind) {
-  val lProp = SimpleLongProperty().apply { bindBidirectional(fxProp) }
+  val lProp by lazy { SimpleLongProperty().apply { bindBidirectional(fxProp) } }
   override operator fun getValue(
 	thisRef: Any,
 	property: KProperty<*>
@@ -106,7 +106,7 @@ class FXD(
   default: Double? = null,
   bind: KProperty<*>? = null
 ): FX<Number, DoubleProperty>(default, bind) {
-  val doubleProp = SimpleDoubleProperty().apply { bindBidirectional(fxProp) }
+  val doubleProp by lazy { SimpleDoubleProperty().apply { bindBidirectional(fxProp) } }
   override operator fun getValue(
 	thisRef: Any,
 	property: KProperty<*>
@@ -143,15 +143,23 @@ abstract class FX<V, P: ObservableValue<V>>(
   default: V? = null,
   val bind: KProperty<*>? = null
 ): FXDelegateBase() {
-  val fxProp = SimpleObjectProperty<V>(default)
+
+  lateinit var thisRefVar: Any
+  lateinit var propVar: KProperty<*>
+
+  val fxProp by lazy {
+	initialize(thisRefVar, propVar.name)
+	SimpleObjectProperty<V>(default).apply {
+	  bindToJsonProp(o = thisRefVar, prop = bind?.name ?: propVar.name)
+	}
+  }
+
   operator fun provideDelegate(
 	thisRef: Any,
 	prop: KProperty<*>
   ): FX<V, P> {
-	initialize(thisRef, prop.name)
-	val search = bind?.name ?: prop.name
-
-	fxProp.bindToJsonProp(o = thisRef, prop = search)
+	thisRefVar = thisRef
+	propVar = prop
 	return this
   }
 
@@ -291,7 +299,9 @@ class FXSet<V>(
 	initialize(thisRef, prop.name)
 	val search = bind?.name ?: prop.name
 	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
-	  require(d.setfun == null && d.getfun == null) { "would need more dev and to specify if I'm setting the elements or the list" }
+	  require(
+		d.setfun == null && d.getfun == null
+	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperSetDelegate<*, *>)
 	  if (d.wasSet) {
 		@Suppress("UNCHECKED_CAST")
