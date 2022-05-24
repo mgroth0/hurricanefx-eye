@@ -25,7 +25,7 @@ import matt.json.custom.JsonModel
 import matt.kjlib.delegate.SuperDelegate
 import matt.kjlib.delegate.SuperListDelegate
 import matt.kjlib.delegate.SuperSetDelegate
-import matt.kjlib.log.err
+import matt.kjlib.lang.err
 import matt.kjlib.whileTrue
 import matt.klibexport.klibexport.go
 import matt.klibexport.klibexport.setAll

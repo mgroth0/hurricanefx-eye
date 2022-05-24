@@ -6,7 +6,7 @@ import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lib.onChange
-import matt.kjlib.log.NEVER
+import matt.kjlib.lang.NEVER
 
 fun <O, E> ObservableList<O>.toMappedList(mapfun: (O)->E) = MappedList(this, mapfun)
 
