@@ -12,7 +12,7 @@ import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import matt.hurricanefx.eye.collect.asObservable
 import matt.hurricanefx.eye.lib.onChange
-import matt.kbuild.decap
+import matt.klib.lang.decap
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.concurrent.Callable
