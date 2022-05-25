@@ -26,7 +26,7 @@ import matt.kjlib.delegate.SuperDelegate
 import matt.kjlib.delegate.SuperListDelegate
 import matt.kjlib.delegate.SuperSetDelegate
 import matt.kjlib.lang.err
-import matt.kjlib.whileTrue
+import matt.kjlib.lang.whileTrue
 import matt.klibexport.klibexport.go
 import matt.klibexport.klibexport.setAll
 import java.util.WeakHashMap
