@@ -42,7 +42,6 @@ import matt.klibexport.klibexport.go
 import matt.klibexport.klibexport.setAll
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
-import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
 
 abstract class FXDelegateBase {
@@ -311,7 +310,8 @@ class FXSet<V>(
 		//                }
 		require(it is Set<*>)
 		if (!sending) {
-		  @Suppress("UNCHECKED_CAST") sendingToFxProp = true
+		  @Suppress("UNCHECKED_CAST")
+		  sendingToFxProp = true
 		  @Suppress("UNCHECKED_CAST") fxProp.setAll(it as Set<V>)
 		  sendingToFxProp = false
 		}
@@ -409,12 +409,15 @@ abstract class SavableFX {
 }*/
 
 
+val primsOnly = "primitives only for now"
+
 
 class FXPropertySerializer(val cls: KClass<*>): KSerializer<Property<*>> {
   override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Property") {
 	element("type", String.serializer().descriptor)
 	element("value", cls.serialDescriptor())
   }
+
 
   @Suppress("OPT_IN_USAGE")
   override fun serialize(encoder: Encoder, value: Property<*>) {
@@ -433,7 +436,7 @@ class FXPropertySerializer(val cls: KClass<*>): KSerializer<Property<*>> {
 		Double::class  -> encodeDoubleElement(
 		  d, 1, v as Double
 		)        /*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
-		else           -> err("primitives only for now")
+		else           -> err(primsOnly)
 	  }
 	}
   }
@@ -457,7 +460,7 @@ class FXPropertySerializer(val cls: KClass<*>): KSerializer<Property<*>> {
 		Double::class.qualifiedName  -> decodeDoubleElement(
 		  d, 1
 		)        /*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
-		else                         -> err("primitives only for now")
+		else                         -> err(primsOnly)
 	  }
 	}
 
@@ -499,6 +502,6 @@ fun createFxPropFromPrimQClassName(qname: String) = when (qname) {
   Long::class.qualifiedName    -> SimpleLongProperty()
   Float::class.qualifiedName   -> SimpleFloatProperty()
   Double::class.qualifiedName  -> SimpleDoubleProperty()/*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
-  else                         -> err("primitives only for now")
+  else                         -> err(primsOnly)
 }
 
