@@ -36,10 +36,10 @@ import matt.json.custom.JsonModel
 import matt.kjlib.delegate.SuperDelegate
 import matt.kjlib.delegate.SuperListDelegate
 import matt.kjlib.delegate.SuperSetDelegate
-import matt.kjlib.lang.err
-import matt.kjlib.lang.whileTrue
+import matt.klib.lang.err
 import matt.klib.lang.go
 import matt.klib.lang.setAll
+import matt.klib.lang.whileTrue
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
