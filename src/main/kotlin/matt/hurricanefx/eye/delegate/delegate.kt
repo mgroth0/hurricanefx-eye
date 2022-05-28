@@ -38,8 +38,8 @@ import matt.kjlib.delegate.SuperListDelegate
 import matt.kjlib.delegate.SuperSetDelegate
 import matt.kjlib.lang.err
 import matt.kjlib.lang.whileTrue
-import matt.klibexport.klibexport.go
-import matt.klibexport.klibexport.setAll
+import matt.klib.lang.go
+import matt.klib.lang.setAll
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
