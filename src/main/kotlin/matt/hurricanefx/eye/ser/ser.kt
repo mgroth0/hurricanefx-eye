@@ -11,11 +11,13 @@ import kotlinx.serialization.json.JsonEncoder
 import matt.hurricanefx.eye.lang.createFxProp
 import matt.hurricanefx.eye.lib.onActualChange
 import matt.kjlib.weak.bag.WeakBag
+import matt.reflect.access
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
 import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.KCallable
 
 inline fun <reified T: Any> fx(default: T? = null, autosave: Boolean = false) =
   FXPropProvider(default, T::class, autosave = autosave)
@@ -61,23 +63,18 @@ class FXProp<V>(
 
 }
 
+
+
+
 @Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.fx
-  get() = (this.apply {
-	/*	*
-		* Caused by: kotlin.reflect.full.IllegalPropertyDelegateAccessException: Cannot obtain the delegate of a non-accessible property. Use "isAccessible = true" to make the property accessible
-		*
-		* */
-	isAccessible = true
-  }.getDelegate() as FXProp<V>).fxProp
+  get() = access {
+	(getDelegate() as FXProp<V>)
+  }.fxProp
 
 
-@Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = (this.apply {
-  /*  *
-	* Caused by: kotlin.reflect.full.IllegalPropertyDelegateAccessException: Cannot obtain the delegate of a non-accessible property. Use "isAccessible = true" to make the property accessible
-	*
-	* */
-  isAccessible = true
-}.getDelegate(t) as FXProp<V>).fxProp
+@Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = access {
+  (getDelegate(t) as FXProp<V>)
+}.fxProp
 
 
 abstract class JsonSerializer<T>(qname: String): KSerializer<T> {
