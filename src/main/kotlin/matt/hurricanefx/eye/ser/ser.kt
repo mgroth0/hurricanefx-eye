@@ -8,9 +8,8 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
-import matt.hurricanefx.eye.delegate.createFxProp
+import matt.hurricanefx.eye.lang.createFxProp
 import matt.hurricanefx.eye.lib.onActualChange
-import matt.kjlib.map.lazyMap
 import matt.kjlib.weak.bag.WeakBag
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -25,7 +24,7 @@ inline fun <reified T: Any> autoFX(default: T? = null) = FXPropProvider(default,
 
 val blockAutoSavingOfThese = WeakBag<Any>()
 
-class FXPropProvider<T: Any>(val default: T?, val vCls: KClass<T>, val autosave: Boolean = false) {
+class FXPropProvider<T: Any>(val default: T?, private val vCls: KClass<T>, val autosave: Boolean = false) {
   operator fun provideDelegate(
 	thisRef: Any, prop: KProperty<*>
   ): FXProp<T> = FXProp(
@@ -36,10 +35,6 @@ class FXPropProvider<T: Any>(val default: T?, val vCls: KClass<T>, val autosave:
 
 interface SavableObj {
   fun save()
-}
-
-val serialProps = lazyMap<KClass<*>, MutableSet<String>> {
-  mutableSetOf<String>()
 }
 
 class FXProp<V>(
