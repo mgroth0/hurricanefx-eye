@@ -86,7 +86,7 @@ class FXProp<V>(
 
 
 abstract class JsonSerializer<T>(qname: String): KSerializer<T> {
-  override val descriptor = buildClassSerialDescriptor(qname)
+  final override val descriptor = buildClassSerialDescriptor(qname)
 
   final override fun deserialize(decoder: Decoder): T {
 	return deserialize(jsonElement = (decoder as JsonDecoder).decodeJsonElement())

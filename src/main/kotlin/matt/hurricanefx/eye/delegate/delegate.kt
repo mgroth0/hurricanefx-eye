@@ -412,64 +412,64 @@ abstract class SavableFX {
 val primsOnly = "primitives only for now"
 
 
-class FXPropertySerializer(val cls: KClass<*>): KSerializer<Property<*>> {
-  override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Property") {
-	element("type", String.serializer().descriptor)
-	element("value", cls.serialDescriptor())
-  }
-
-
-  @Suppress("OPT_IN_USAGE")
-  override fun serialize(encoder: Encoder, value: Property<*>) {
-	val v = value.value!!
-	val type = v::class.qualifiedName!!
-	encoder.encodeStructure(descriptor) {
-	  encodeStringElement(String.serializer().descriptor, 0, type)
-	  val d = descriptor.elementDescriptors.toList()[1]
-	  when (cls) {
-		Boolean::class -> encodeBooleanElement(d, 1, v as Boolean)
-		Char::class    -> encodeCharElement(d, 1, v as Char)
-		String::class  -> encodeStringElement(d, 1, v as String)
-		Int::class     -> encodeIntElement(d, 1, v as Int)
-		Long::class    -> encodeLongElement(d, 1, v as Long)
-		Float::class   -> encodeFloatElement(d, 1, v as Float)
-		Double::class  -> encodeDoubleElement(
-		  d, 1, v as Double
-		)        /*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
-		else           -> err(primsOnly)
-	  }
-	}
-  }
-
-  @Suppress("OPT_IN_USAGE")
-  override fun deserialize(decoder: Decoder): Property<*> {
-
-	var type: String? = null
-	var value: java.io.Serializable? = null /*idk*/
-
-	decoder.decodeStructure(descriptor) {
-	  type = decodeStringElement(String.serializer().descriptor, 0)
-	  val d = descriptor.elementDescriptors.toList()[1]
-	  value = when (type) {
-		Boolean::class.qualifiedName -> decodeBooleanElement(d, 1)
-		Char::class.qualifiedName    -> decodeCharElement(d, 1)
-		String::class.qualifiedName  -> decodeStringElement(d, 1)
-		Int::class.qualifiedName     -> decodeIntElement(d, 1)
-		Long::class.qualifiedName    -> decodeLongElement(d, 1)
-		Float::class.qualifiedName   -> decodeFloatElement(d, 1)
-		Double::class.qualifiedName  -> decodeDoubleElement(
-		  d, 1
-		)        /*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
-		else                         -> err(primsOnly)
-	  }
-	}
-
-	return createFxPropFromPrimQClassName(type!!).also {
-	  it.value = value!!
-	}
-
-  }
-}
+//class FXPropertySerializer(val cls: KClass<*>): KSerializer<Property<*>> {
+//  override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Property") {
+//	element("type", String.serializer().descriptor)
+//	element("value", cls.serialDescriptor())
+//  }
+//
+//
+//  @Suppress("OPT_IN_USAGE")
+//  override fun serialize(encoder: Encoder, value: Property<*>) {
+//	val v = value.value!!
+//	val type = v::class.qualifiedName!!
+//	encoder.encodeStructure(descriptor) {
+//	  encodeStringElement(String.serializer().descriptor, 0, type)
+//	  val d = descriptor.elementDescriptors.toList()[1]
+//	  when (cls) {
+//		Boolean::class -> encodeBooleanElement(d, 1, v as Boolean)
+//		Char::class    -> encodeCharElement(d, 1, v as Char)
+//		String::class  -> encodeStringElement(d, 1, v as String)
+//		Int::class     -> encodeIntElement(d, 1, v as Int)
+//		Long::class    -> encodeLongElement(d, 1, v as Long)
+//		Float::class   -> encodeFloatElement(d, 1, v as Float)
+//		Double::class  -> encodeDoubleElement(
+//		  d, 1, v as Double
+//		)        /*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
+//		else           -> err(primsOnly)
+//	  }
+//	}
+//  }
+//
+//  @Suppress("OPT_IN_USAGE")
+//  override fun deserialize(decoder: Decoder): Property<*> {
+//
+//	var type: String? = null
+//	var value: java.io.Serializable? = null /*idk*/
+//
+//	decoder.decodeStructure(descriptor) {
+//	  type = decodeStringElement(String.serializer().descriptor, 0)
+//	  val d = descriptor.elementDescriptors.toList()[1]
+//	  value = when (type) {
+//		Boolean::class.qualifiedName -> decodeBooleanElement(d, 1)
+//		Char::class.qualifiedName    -> decodeCharElement(d, 1)
+//		String::class.qualifiedName  -> decodeStringElement(d, 1)
+//		Int::class.qualifiedName     -> decodeIntElement(d, 1)
+//		Long::class.qualifiedName    -> decodeLongElement(d, 1)
+//		Float::class.qualifiedName   -> decodeFloatElement(d, 1)
+//		Double::class.qualifiedName  -> decodeDoubleElement(
+//		  d, 1
+//		)        /*TODO: List::class -> SimpleListProperty<Any>() as Property<T>*/
+//		else                         -> err(primsOnly)
+//	  }
+//	}
+//
+//	return createFxPropFromPrimQClassName(type!!).also {
+//	  it.value = value!!
+//	}
+//
+//  }
+//}
 
 @Suppress("UNCHECKED_CAST")
 fun KClass<*>.createFxProp(): Property<*> = when (this) {
