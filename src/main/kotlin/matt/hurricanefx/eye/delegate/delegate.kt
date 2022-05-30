@@ -67,8 +67,16 @@ fun FXI(default: I? = null, bind: KProperty<*>? = null) = FX<I, IntegerProperty>
 fun FXS(default: S? = null, bind: KProperty<*>? = null) = FX<S, StringProperty>(default, bind, SProp::class)
 fun FXL(default: L? = null, bind: KProperty<*>? = null) = FX<L, LongProperty>(default, bind, LProp::class)
 fun FXD(default: D? = null, bind: KProperty<*>? = null) = FX<D, DoubleProperty>(default, bind, DProp::class)
-fun <V> FXO(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
+fun <V: Any> FXO(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
 fun <V: Enum<V>> FXE(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
+
+fun FXBN(default: B? = null, bind: KProperty<*>? = null) = FX<B?, BooleanProperty>(default, bind, BProp::class)
+fun FXIN(default: I? = null, bind: KProperty<*>? = null) = FX<I?, IntegerProperty>(default, bind, IProp::class)
+fun FXSN(default: S? = null, bind: KProperty<*>? = null) = FX<S?, StringProperty>(default, bind, SProp::class)
+fun FXLN(default: L? = null, bind: KProperty<*>? = null) = FX<L?, LongProperty>(default, bind, LProp::class)
+fun FXDN(default: D? = null, bind: KProperty<*>? = null) = FX<D?, DoubleProperty>(default, bind, DProp::class)
+fun <V> FXON(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V>>(default, bind)
+fun <V: Enum<V>> FXEN(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V>>(default, bind)
 
 class FX<V, P: ObservableValue<*>> internal constructor(
   default: V? = null,
@@ -101,6 +109,9 @@ class FX<V, P: ObservableValue<*>> internal constructor(
 		println("creating SimpleObjectProperty with $default")
 		SimpleObjectProperty<V>(default) as Property<V>
 	  }
+	}
+	if (bind != null) {
+	  err("no")
 	}
 	prop.apply {
 	  bindToJsonProp(o = thisRefVar, prop = bind?.name ?: propVar.name)
