@@ -64,13 +64,14 @@ fun FXD(default: D? = null, bind: KProperty<*>? = null) = FX<D, DoubleProperty>(
 fun <V: Any> FXO(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
 fun <V: Enum<V>> FXE(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
 
-fun FXBN(default: B? = null, bind: KProperty<*>? = null) = FX<B?, BooleanProperty>(default, bind, BProp::class)
-fun FXIN(default: I? = null, bind: KProperty<*>? = null) = FX<I?, IntegerProperty>(default, bind, IProp::class)
-fun FXSN(default: S? = null, bind: KProperty<*>? = null) = FX<S?, StringProperty>(default, bind, SProp::class)
-fun FXLN(default: L? = null, bind: KProperty<*>? = null) = FX<L?, LongProperty>(default, bind, LProp::class)
-fun FXDN(default: D? = null, bind: KProperty<*>? = null) = FX<D?, DoubleProperty>(default, bind, DProp::class)
-fun <V> FXON(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V>>(default, bind)
-fun <V: Enum<V>> FXEN(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V>>(default, bind)
+/*need to use object properties here because primitive type properties are not nullable it seems*/
+fun FXBN(default: B? = null, bind: KProperty<*>? = null) = FX<B?, ObjectProperty<B?>>(default, bind)
+fun FXIN(default: I? = null, bind: KProperty<*>? = null) = FX<I?, ObjectProperty<I?>>(default, bind)
+fun FXSN(default: S? = null, bind: KProperty<*>? = null) = FX<S?, ObjectProperty<S?>>(default, bind)
+fun FXLN(default: L? = null, bind: KProperty<*>? = null) = FX<L?, ObjectProperty<L?>>(default, bind)
+fun FXDN(default: D? = null, bind: KProperty<*>? = null) = FX<D?, ObjectProperty<D?>>(default, bind)
+fun <V> FXON(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V?>>(default, bind)
+fun <V: Enum<V>> FXEN(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V?>>(default, bind)
 
 class FX<V, P: Property<*>> internal constructor(
   default: V? = null,
@@ -87,11 +88,11 @@ class FX<V, P: Property<*>> internal constructor(
 	val prop = propClass?.let { cls ->
 	  when (default) {
 		null -> cls.constructors.first { it.parameters.isEmpty() }.run {
-		  println("calling ${this} with no params")
+//		  println("calling ${this} with no params")
 		  call() as P
 		}
 		else -> cls.constructors.first { it.parameters.size == 1 }.run {
-		  println("calling ${this} with ${default}")
+//		  println("calling ${this} with ${default}")
 		  call(default) as P
 		}
 	  }
