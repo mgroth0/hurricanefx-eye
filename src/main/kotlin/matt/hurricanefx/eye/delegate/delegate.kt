@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package matt.hurricanefx.eye.delegate
 
 import javafx.beans.property.BooleanProperty
@@ -89,19 +91,23 @@ class FX<V, P: Property<*>> internal constructor(
 	  when (default) {
 		null -> cls.constructors.first { it.parameters.isEmpty() }.run {
 //		  println("calling ${this} with no params")
+		  @Suppress("UNCHECKED_CAST")
 		  call() as P
 		}
 		else -> cls.constructors.first { it.parameters.size == 1 }.run {
 //		  println("calling ${this} with ${default}")
+		  @Suppress("UNCHECKED_CAST")
 		  call(default) as P
 		}
 	  }
 	} ?: run {
 	  if (default == null) {
 		println("creating SimpleObjectProperty with no args")
+		@Suppress("UNCHECKED_CAST")
 		SimpleObjectProperty<V>() as P
 	  } else {
 		println("creating SimpleObjectProperty with $default")
+		@Suppress("UNCHECKED_CAST")
 		SimpleObjectProperty<V>(default) as P
 	  }
 	}
