@@ -15,6 +15,12 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.beans.value.ObservableValue
 import matt.hurricanefx.eye.collect.toObservable
+import matt.hurricanefx.eye.lang.BProp
+import matt.hurricanefx.eye.lang.DProp
+import matt.hurricanefx.eye.lang.IProp
+import matt.hurricanefx.eye.lang.LProp
+import matt.hurricanefx.eye.lang.Prop
+import matt.hurricanefx.eye.lang.SProp
 import matt.hurricanefx.eye.lang.listen
 import matt.hurricanefx.eye.lib.onChange
 import matt.json.custom.Json
@@ -22,14 +28,23 @@ import matt.json.custom.JsonModel
 import matt.kjlib.delegate.SuperDelegate
 import matt.kjlib.delegate.SuperListDelegate
 import matt.kjlib.delegate.SuperSetDelegate
+import matt.klib.lang.B
+import matt.klib.lang.D
+import matt.klib.lang.I
+import matt.klib.lang.L
+import matt.klib.lang.Num
+import matt.klib.lang.S
 import matt.klib.lang.err
 import matt.klib.lang.go
 import matt.klib.lang.setAll
 import matt.klib.lang.whileTrue
+import matt.reflect.access
 import java.util.WeakHashMap
 import kotlin.DeprecationLevel.WARNING
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty0
+import kotlin.reflect.KProperty1
 
 abstract class FXDelegateBase {
   companion object {
@@ -47,13 +62,13 @@ abstract class FXDelegateBase {
 }
 
 
-fun FXB (default: Boolean? = null,  bind: KProperty<*>? = null)  = FX<Boolean, BooleanProperty>(default, bind, SimpleBooleanProperty::class)
-fun FXI (default: Int? = null, bind: KProperty<*>? = null)  = FX<Number, IntegerProperty>(default, bind, SimpleIntegerProperty::class)
-fun FXS (default: String? = null, bind: KProperty<*>? = null)  = FX<String, StringProperty>(default, bind, SimpleStringProperty::class)
-fun FXL (default: Long? = null, bind: KProperty<*>? = null)  = FX<Number, LongProperty>(default, bind, SimpleLongProperty::class)
-fun FXD (default: Double? = null, bind: KProperty<*>? = null)  = FX<Number, DoubleProperty>(default, bind, SimpleDoubleProperty::class)
-fun <V> FXO (default: V? = null, bind: KProperty<*>? = null)  = FX<V, ObjectProperty<V>>(default, bind)
-fun <V: Enum<V>> FXE (default: V? = null, bind: KProperty<*>? = null)  = FX<V, ObjectProperty<V>>(default, bind)
+fun FXB(default: B? = null, bind: KProperty<*>? = null) = FX<B, BooleanProperty>(default, bind, BProp::class)
+fun FXI(default: I? = null, bind: KProperty<*>? = null) = FX<Num, IntegerProperty>(default, bind, IProp::class)
+fun FXS(default: S? = null, bind: KProperty<*>? = null) = FX<S, StringProperty>(default, bind, SProp::class)
+fun FXL(default: L? = null, bind: KProperty<*>? = null) = FX<Num, LongProperty>(default, bind, LProp::class)
+fun FXD(default: D? = null, bind: KProperty<*>? = null) = FX<Num, DoubleProperty>(default, bind, DProp::class)
+fun <V> FXO(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
+fun <V: Enum<V>> FXE(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
 
 class FX<V, P: ObservableValue<V>> internal constructor(
   default: V? = null,
@@ -102,7 +117,15 @@ class FX<V, P: ObservableValue<V>> internal constructor(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): P = fxProp as P
+  ): V = fxProp.value
+
+  operator fun setValue(
+	thisRef: Any,
+	property: KProperty<*>,
+	value: V
+  ) {
+	fxProp.value = value
+  }
 
   override fun onChange(op: ()->Unit) {
 	fxProp.onChange {
@@ -248,3 +271,13 @@ class FXSet<V>(
 	fxProp.listen(onAdd, onRemove)
   }
 }
+
+@Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.fx
+  get() = access {
+	(getDelegate() as FX<V, Property<V>>)
+  }.fxProp
+
+
+@Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = access {
+  (getDelegate(t) as FX<V, Property<V>>)
+}.fxProp
