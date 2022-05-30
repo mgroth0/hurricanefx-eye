@@ -39,6 +39,7 @@ import matt.klib.lang.err
 import matt.klib.lang.go
 import matt.klib.lang.setAll
 import matt.klib.lang.whileTrue
+import matt.klib.log.warn
 import matt.reflect.access
 import java.util.WeakHashMap
 import kotlin.DeprecationLevel.WARNING
@@ -178,6 +179,9 @@ fun <V> Property<V>.bindToJsonProp(o: Any, prop: String) {
 class FXList<V>(
   vararg default: V, val bind: KProperty<*>? = null
 ): FXDelegateBase() {
+  init {
+	warn("does this have to a by? can it not just be a regular val instead of a property delegate?")
+  }
   private val fxProp = default.toList().toObservable()
   operator fun provideDelegate(
 	thisRef: Any, prop: KProperty<*>
