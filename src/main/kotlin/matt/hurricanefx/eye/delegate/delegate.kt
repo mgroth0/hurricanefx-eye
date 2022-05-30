@@ -38,6 +38,8 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
 import javafx.beans.binding.NumberExpression;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
 
 abstract class FXDelegateBase {
   companion object {
@@ -292,3 +294,9 @@ class FXSet<V>(
 
 @Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.num get() = fx as NumberExpression
 @Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.num(t: T) = fx(t) as NumberExpression
+
+@Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.bool get() = fx as BooleanExpression
+@Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.bool(t: T) = fx(t) as BooleanExpression
+
+@Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.str get() = fx as StringExpression
+@Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.str(t: T) = fx(t) as StringExpression
