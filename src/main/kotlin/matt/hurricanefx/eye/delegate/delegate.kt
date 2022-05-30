@@ -3,24 +3,16 @@ package matt.hurricanefx.eye.delegate
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.IntegerProperty
-import javafx.beans.property.IntegerPropertyBase
 import javafx.beans.property.LongProperty
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.Property
-import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleDoubleProperty
-import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleLongProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
-import javafx.beans.value.ObservableValue
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lang.BProp
 import matt.hurricanefx.eye.lang.DProp
 import matt.hurricanefx.eye.lang.IProp
 import matt.hurricanefx.eye.lang.LProp
-import matt.hurricanefx.eye.lang.Prop
 import matt.hurricanefx.eye.lang.SProp
 import matt.hurricanefx.eye.lang.listen
 import matt.hurricanefx.eye.lib.onChange
@@ -33,7 +25,6 @@ import matt.klib.lang.B
 import matt.klib.lang.D
 import matt.klib.lang.I
 import matt.klib.lang.L
-import matt.klib.lang.Num
 import matt.klib.lang.S
 import matt.klib.lang.err
 import matt.klib.lang.go
@@ -42,7 +33,6 @@ import matt.klib.lang.whileTrue
 import matt.klib.log.warn
 import matt.reflect.access
 import java.util.WeakHashMap
-import kotlin.DeprecationLevel.WARNING
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
@@ -79,7 +69,7 @@ fun FXDN(default: D? = null, bind: KProperty<*>? = null) = FX<D?, DoubleProperty
 fun <V> FXON(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V>>(default, bind)
 fun <V: Enum<V>> FXEN(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V>>(default, bind)
 
-class FX<V, P: ObservableValue<*>> internal constructor(
+class FX<V, P: Property<*>> internal constructor(
   default: V? = null,
   val bind: KProperty<*>? = null,
   private val propClass: KClass<out Property<*>>? = null
@@ -88,27 +78,27 @@ class FX<V, P: ObservableValue<*>> internal constructor(
   private lateinit var thisRefVar: Any
   private lateinit var propVar: KProperty<*>
 
-  val fxProp: Property<V> by lazy {
+  val fxProp: P by lazy {
 	initialize(thisRefVar, propVar.name)
 
 	val prop = propClass?.let { cls ->
 	  when (default) {
 		null -> cls.constructors.first { it.parameters.isEmpty() }.run {
 		  println("calling ${this} with no params")
-		  call() as Property<V>
+		  call() as P
 		}
 		else -> cls.constructors.first { it.parameters.size == 1 }.run {
 		  println("calling ${this} with ${default}")
-		  call(default) as Property<V>
+		  call(default) as P
 		}
 	  }
 	} ?: run {
 	  if (default == null) {
 		println("creating SimpleObjectProperty with no args")
-		SimpleObjectProperty<V>() as Property<V>
+		SimpleObjectProperty<V>() as P
 	  } else {
 		println("creating SimpleObjectProperty with $default")
-		SimpleObjectProperty<V>(default) as Property<V>
+		SimpleObjectProperty<V>(default) as P
 	  }
 	}
 	if (bind != null) {
@@ -129,7 +119,7 @@ class FX<V, P: ObservableValue<*>> internal constructor(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): V = fxProp.value
+  ): V = fxProp.value as V
 
   operator fun setValue(
 	thisRef: Any,

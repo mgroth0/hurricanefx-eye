@@ -93,6 +93,9 @@ fun <T> ObservableValue<T>.onChangeOnce(op: (T?)->Unit) = onChangeTimes(1, op)
 
 fun <T> ObservableValue<T>.onChange(op: (T?)->Unit) = apply { addListener { _, _, newValue -> op(newValue) } }
 
+/*matt was here*/
+fun <T> Property<T>.onChange(op: (T?)->Unit) = apply { addListener { _, _, newValue -> op(newValue) } }
+
 fun <T> ObservableValue<T>.onActualChange(op: (T?)->Unit) = apply {
   addListener { _, oldValue, newValue ->
 	if (oldValue != newValue) op(newValue)
