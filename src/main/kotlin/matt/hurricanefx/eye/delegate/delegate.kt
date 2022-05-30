@@ -2,6 +2,10 @@
 
 package matt.hurricanefx.eye.delegate
 
+import javafx.beans.Observable
+import javafx.beans.binding.BooleanExpression
+import javafx.beans.binding.NumberExpression
+import javafx.beans.binding.StringExpression
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.IntegerProperty
@@ -39,14 +43,19 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
-import javafx.beans.binding.NumberExpression;
-import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
+
+val Any.fxDelegates get() = FXDelegateBase.instances[this]!!
+val Any.fxBools get() = fxDelegates
+  .filterValues { it is FX<*, *> && it.observable is BooleanProperty }
+  .mapValues { (it.value as FX<*, *>).observable as BooleanProperty }
+  .values
 
 abstract class FXDelegateBase {
   companion object {
 	val instances = WeakHashMap<Any, MutableMap<String, FXDelegateBase>>()
   }
+
+  abstract val observable: Observable
 
   fun initialize(
 	thisRef: Any, name: String
@@ -84,31 +93,29 @@ class FX<V, P: Property<*>> internal constructor(
   private lateinit var thisRefVar: Any
   private lateinit var propVar: KProperty<*>
 
-  val fxProp: P by lazy {
-	initialize(thisRefVar, propVar.name)
+  override val observable: P by lazy {
+
 
 	val prop = propClass?.let { cls ->
 	  when (default) {
-		null -> cls.constructors.first { it.parameters.isEmpty() }.run {
-//		  println("calling ${this} with no params")
+		null -> cls.constructors.first { it.parameters.size == 2 }.run {
 		  @Suppress("UNCHECKED_CAST")
-		  call() as P
+		  call(thisRefVar, propVar.name) as P
 		}
-		else -> cls.constructors.first { it.parameters.size == 1 }.run {
-//		  println("calling ${this} with ${default}")
+		else -> cls.constructors.first { it.parameters.size == 3 }.run {
 		  @Suppress("UNCHECKED_CAST")
-		  call(default) as P
+		  call(thisRefVar, propVar.name, default) as P
 		}
 	  }
 	} ?: run {
 	  if (default == null) {
 		println("creating SimpleObjectProperty with no args")
 		@Suppress("UNCHECKED_CAST")
-		SimpleObjectProperty<V>() as P
+		SimpleObjectProperty<V>(thisRefVar, propVar.name) as P
 	  } else {
 		println("creating SimpleObjectProperty with $default")
 		@Suppress("UNCHECKED_CAST")
-		SimpleObjectProperty<V>(default) as P
+		SimpleObjectProperty<V>(thisRefVar, propVar.name, default) as P
 	  }
 	}
 	if (bind != null) {
@@ -124,23 +131,24 @@ class FX<V, P: Property<*>> internal constructor(
   ): FX<V, P> {
 	thisRefVar = thisRef
 	propVar = prop
+	initialize(thisRefVar, propVar.name)
 	return this
   }
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): V = fxProp.value as V
+  ): V = observable.value as V
 
   operator fun setValue(
 	thisRef: Any,
 	property: KProperty<*>,
 	value: V
   ) {
-	fxProp.value = value
+	observable.value = value
   }
 
   override fun onChange(op: ()->Unit) {
-	fxProp.onChange {
+	observable.onChange {
 	  op()
 	}
   }
@@ -183,7 +191,7 @@ class FXList<V>(
 	warn("does this have to a by? can it not just be a regular val instead of a property delegate?")
   }
 
-  private val fxProp = default.toList().toObservable()
+  override val observable = default.toList().toObservable()
   operator fun provideDelegate(
 	thisRef: Any, prop: KProperty<*>
   ): FXList<V> {
@@ -195,18 +203,18 @@ class FXList<V>(
 	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperListDelegate<*, *>)
 	  if (d.wasSet) {
-		fxProp.setAll(d.get() as List<V>)
+		observable.setAll(d.get() as List<V>)
 	  }
 	  var sending = false
-	  fxProp.onChange {
+	  observable.onChange {
 		sending = true
-		d.setAll(fxProp.toList())
+		d.setAll(observable.toList())
 		sending = false
 	  }
 	  d.onChange {
 		require(it is List<*>)
 		if (!sending) {
-		  fxProp.setAll(it as List<V>)
+		  observable.setAll(it as List<V>)
 		}
 	  }
 	}
@@ -215,16 +223,16 @@ class FXList<V>(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ) = fxProp
+  ) = observable
 
-  override fun onChange(op: ()->Unit) = fxProp.onChange { op() }
+  override fun onChange(op: ()->Unit) = observable.onChange { op() }
 
-  fun afterChange(op: ()->Unit) = fxProp.onChange {
+  fun afterChange(op: ()->Unit) = observable.onChange {
 	whileTrue { it.next() }
 	op()
   }
 
-  fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) = fxProp.listen(onAdd, onRemove)
+  fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) = observable.listen(onAdd, onRemove)
 
 
 }
@@ -233,7 +241,7 @@ class FXList<V>(
 class FXSet<V>(
   vararg default: V, val bind: KProperty<*>? = null
 ): FXDelegateBase() {
-  private val fxProp = default.toSet().toObservable()
+  override val observable = default.toSet().toObservable()
   operator fun provideDelegate(
 	thisRef: Any, prop: KProperty<*>
   ): FXSet<V> {
@@ -245,11 +253,11 @@ class FXSet<V>(
 	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperSetDelegate<*, *>)
 	  if (d.wasSet) {
-		fxProp.setAll(d.get() as Set<V>)
+		observable.setAll(d.get() as Set<V>)
 	  }
 	  var sending = false
 	  var sendingToFxProp = false
-	  fxProp.listen(onAdd = {
+	  observable.listen(onAdd = {
 		if (!sendingToFxProp) {
 		  sending = true
 		  d.add(it)
@@ -266,7 +274,7 @@ class FXSet<V>(
 		require(it is Set<*>)
 		if (!sending) {
 		  sendingToFxProp = true
-		  fxProp.setAll(it as Set<V>)
+		  observable.setAll(it as Set<V>)
 		  sendingToFxProp = false
 		}
 	  }
@@ -277,26 +285,26 @@ class FXSet<V>(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ) = fxProp
+  ) = observable
 
   override fun onChange(op: ()->Unit) = err(
 	"onChange is broken for sets :( and no, you cant just listen. Issue is that the listener is run BEFORE the actual change which is not what is ever expected"
   )
 
   fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) {
-	fxProp.listen(onAdd, onRemove)
+	observable.listen(onAdd, onRemove)
   }
 }
 
 @Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.fx
   get() = access {
 	(getDelegate() as FX<V, Property<V>>)
-  }.fxProp
+  }.observable
 
 
 @Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = access {
   (getDelegate(t) as FX<V, Property<V>>)
-}.fxProp
+}.observable
 
 
 @Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.num get() = fx as NumberExpression

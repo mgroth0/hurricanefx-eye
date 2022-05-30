@@ -11,6 +11,8 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import matt.hurricanefx.eye.delegate.fxDelegates
+import matt.json.custom.jsonObj
 
 //inline fun <reified T: Any> fx(default: T? = null, autosave: Boolean = false) =
 //  FXPropProvider(default, T::class, autosave = autosave)
@@ -54,8 +56,6 @@ import kotlinx.serialization.json.jsonObject
 //}
 
 
-
-
 abstract class JsonSerializer<T>(qname: String): KSerializer<T> {
   final override val descriptor = buildClassSerialDescriptor(qname)
   final override fun deserialize(decoder: Decoder): T {
@@ -71,15 +71,21 @@ abstract class JsonSerializer<T>(qname: String): KSerializer<T> {
 }
 
 abstract class JsonObjectSerializer<T>(qname: String): JsonSerializer<T>(qname) {
-  override fun deserialize(jsonElement: JsonElement): T = deserialize(jsonElement.jsonObject)
+  final override fun deserialize(jsonElement: JsonElement): T = deserialize(jsonElement.jsonObject)
   abstract fun deserialize(jsonObject: JsonObject): T
   abstract override fun serialize(value: T): JsonObject
 }
 
 abstract class JsonArraySerializer<T>(qname: String): JsonSerializer<T>(qname) {
-  override fun deserialize(jsonElement: JsonElement): T = deserialize(jsonElement.jsonArray)
+  final override fun deserialize(jsonElement: JsonElement): T = deserialize(jsonElement.jsonArray)
   abstract fun deserialize(jsonArray: JsonArray): T
   abstract override fun serialize(value: T): JsonArray
+}
+
+abstract class JsonObjectFXSerializer<T>(qname: String): JsonObjectSerializer<T>(qname) {
+  final override fun serialize(value: T) = jsonObj(
+	value!!.fxDelegates.mapValues { it.value.observable }
+  )
 }
 
 
