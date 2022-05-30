@@ -100,7 +100,7 @@ class FX<V, P: ObservableValue<V>> internal constructor(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): Property<V> = fxProp
+  ): P = fxProp as P
 
   override fun onChange(op: ()->Unit) {
 	fxProp.onChange {
