@@ -589,6 +589,11 @@ infix fun NumberExpression.ge(other: Float): BooleanBinding = greaterThanOrEqual
 infix fun NumberExpression.ge(other: Double): BooleanBinding = greaterThanOrEqualTo(other)
 infix fun NumberExpression.ge(other: ObservableNumberValue): BooleanBinding = greaterThanOrEqualTo(other)
 
+
+
+
+
+
 infix fun NumberExpression.eq(other: Int): BooleanBinding = isEqualTo(other)
 infix fun NumberExpression.eq(other: Long): BooleanBinding = isEqualTo(other)
 infix fun NumberExpression.eq(other: ObservableNumberValue): BooleanBinding = isEqualTo(other)

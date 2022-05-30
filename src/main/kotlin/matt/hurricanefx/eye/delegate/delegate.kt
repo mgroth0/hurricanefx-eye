@@ -37,6 +37,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
+import javafx.beans.binding.NumberExpression;
 
 abstract class FXDelegateBase {
   companion object {
@@ -172,6 +173,7 @@ class FXList<V>(
   init {
 	warn("does this have to a by? can it not just be a regular val instead of a property delegate?")
   }
+
   private val fxProp = default.toList().toObservable()
   operator fun provideDelegate(
 	thisRef: Any, prop: KProperty<*>
@@ -286,3 +288,7 @@ class FXSet<V>(
 @Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = access {
   (getDelegate(t) as FX<V, Property<V>>)
 }.fxProp
+
+
+@Suppress("UNCHECKED_CAST") val <V> KProperty0<V>.num get() = fx as NumberExpression
+@Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.num(t: T) = fx(t) as NumberExpression
