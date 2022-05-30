@@ -7,9 +7,9 @@ import javafx.beans.property.DoubleProperty
 import javafx.beans.property.IntegerProperty
 import javafx.beans.property.LongProperty
 import javafx.beans.property.ObjectProperty
+import javafx.beans.property.Property
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
-import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleLongProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -30,7 +30,9 @@ import matt.klib.lang.go
 import matt.klib.lang.setAll
 import matt.klib.lang.whileTrue
 import java.util.WeakHashMap
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
+import kotlin.reflect.full.primaryConstructor
 
 abstract class FXDelegateBase {
   companion object {
@@ -49,56 +51,51 @@ abstract class FXDelegateBase {
 
 class FXB(
   default: Boolean? = null, bind: KProperty<*>? = null
-): FX<Boolean, BooleanProperty>(default, bind) {
-  val boolProp by lazy { SimpleBooleanProperty().apply { bindBidirectional(fxProp) } }
+): FX<Boolean, BooleanProperty>(default, bind, SimpleBooleanProperty::class) {
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): BooleanProperty {
-	return boolProp
+	return fxProp as BooleanProperty
   }
 }
 
 class FXI(
   default: Int? = null, bind: KProperty<*>? = null
-): FX<Number, IntegerProperty>(default, bind) {
-  val intProp by lazy { SimpleIntegerProperty().apply { bindBidirectional(fxProp) } }
+): FX<Number, IntegerProperty>(default, bind, IntegerProperty::class) {
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): IntegerProperty {
-	return intProp
+	return fxProp as IntegerProperty
   }
 }
 
 class FXS(
   default: String? = null, bind: KProperty<*>? = null
-): FX<String, StringProperty>(default, bind) {
-  val stringProp by lazy { SimpleStringProperty().apply { bindBidirectional(fxProp) } }
+): FX<String, StringProperty>(default, bind, SimpleStringProperty::class) {
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): StringProperty {
-	return stringProp
+	return fxProp as StringProperty
   }
 }
 
 class FXL(
   default: Long? = null, bind: KProperty<*>? = null
-): FX<Number, LongProperty>(default, bind) {
-  val lProp by lazy { SimpleLongProperty().apply { bindBidirectional(fxProp) } }
+): FX<Number, LongProperty>(default, bind, SimpleLongProperty::class) {
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): SimpleLongProperty {
-	return lProp
+	return fxProp as SimpleLongProperty
   }
 }
 
 class FXD(
   default: Double? = null, bind: KProperty<*>? = null
-): FX<Number, DoubleProperty>(default, bind) {
-  val doubleProp by lazy { SimpleDoubleProperty().apply { bindBidirectional(fxProp) } }
+): FX<Number, DoubleProperty>(default, bind, SimpleDoubleProperty::class) {
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): DoubleProperty {
-	return doubleProp
+	return fxProp as DoubleProperty
   }
 }
 
@@ -108,7 +105,7 @@ class FXO<V>(
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): ObjectProperty<V> {
-	return fxProp
+	return fxProp as ObjectProperty<V>
   }
 }
 
@@ -118,20 +115,23 @@ class FXE<V: Enum<V>>(
   override operator fun getValue(
 	thisRef: Any, property: KProperty<*>
   ): ObjectProperty<V> {
-	return fxProp
+	return fxProp as ObjectProperty<V>
   }
 }
 
 abstract class FX<V, P: ObservableValue<V>>(
-  default: V? = null, val bind: KProperty<*>? = null
+  default: V? = null,
+  val bind: KProperty<*>? = null,
+  val propClass: KClass<out Property<V>>? = null
 ): FXDelegateBase() {
 
   lateinit var thisRefVar: Any
   lateinit var propVar: KProperty<*>
 
-  val fxProp by lazy {
+  val fxProp: Property<V> by lazy {
 	initialize(thisRefVar, propVar.name)
-	SimpleObjectProperty<V>(default).apply {
+	val prop = propClass?.primaryConstructor?.call(default) ?: SimpleObjectProperty<V>(default)
+	prop.apply {
 	  bindToJsonProp(o = thisRefVar, prop = bind?.name ?: propVar.name)
 	}
   }
@@ -156,7 +156,7 @@ abstract class FX<V, P: ObservableValue<V>>(
 }
 
 
-fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
+fun <V> Property<V>.bindToJsonProp(o: Any, prop: String) {
   ((o as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == prop }?.d?.go { d ->
 	@Suppress("UNCHECKED_CAST") val setFun = d.setfun as ((V)->V)?
 
@@ -166,7 +166,8 @@ fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
 	}
 	require(d is SuperDelegate<*, *>)
 	if (d.wasSet) {
-	  @Suppress("UNCHECKED_CAST") set(d.get() as V?)
+	  @Suppress("UNCHECKED_CAST")
+	  value = d.get() as V?
 	}
 	var sending = false
 	onChange {
@@ -179,14 +180,15 @@ fun <V> SimpleObjectProperty<V>.bindToJsonProp(o: Any, prop: String) {
 		}
 		@Suppress("UNCHECKED_CAST") val s = setFun(it as V)
 		if (s != it) {
-		  set(s)
+		  value = s
 		}
 	  }
 	}
 	d.onChange {
 	  if (!sending) {
-		@Suppress("UNCHECKED_CAST") if (get() != it as V?) { /*might have reloaded json*/
-		  @Suppress("UNCHECKED_CAST") set(it as V?)
+		@Suppress("UNCHECKED_CAST") if (value != it as V?) { /*might have reloaded json*/
+		  @Suppress("UNCHECKED_CAST")
+		  value = it
 		}
 	  }
 	}

@@ -16,8 +16,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
-import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.KCallable
 
 inline fun <reified T: Any> fx(default: T? = null, autosave: Boolean = false) =
   FXPropProvider(default, T::class, autosave = autosave)
