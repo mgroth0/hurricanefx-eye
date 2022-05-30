@@ -1,5 +1,3 @@
-@file:Suppress("unused", "MemberVisibilityCanBePrivate")
-
 package matt.hurricanefx.eye.delegate
 
 import javafx.beans.property.BooleanProperty
@@ -10,13 +8,12 @@ import javafx.beans.property.ObjectProperty
 import javafx.beans.property.Property
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
+import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleLongProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.beans.value.ObservableValue
-import javafx.collections.ObservableList
-import javafx.collections.ObservableSet
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lang.listen
 import matt.hurricanefx.eye.lib.onChange
@@ -32,7 +29,6 @@ import matt.klib.lang.whileTrue
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
-import kotlin.reflect.full.primaryConstructor
 
 abstract class FXDelegateBase {
   companion object {
@@ -46,91 +42,49 @@ abstract class FXDelegateBase {
 	thisRefMap[name] = this
   }
 
-  abstract fun onChange(op: ()->Unit)
+  abstract fun onChange(op: ()->Unit): Any
 }
 
-class FXB(
-  default: Boolean? = null, bind: KProperty<*>? = null
-): FX<Boolean, BooleanProperty>(default, bind, SimpleBooleanProperty::class) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): BooleanProperty {
-	return fxProp as BooleanProperty
-  }
-}
+fun FXB (default: Boolean? = null, bind: KProperty<*>? = null)  = FX<Boolean, BooleanProperty>(default, bind, SimpleBooleanProperty::class)
+fun FXI (default: Int? = null, bind: KProperty<*>? = null)  = FX<Number, IntegerProperty>(default, bind, SimpleIntegerProperty::class)
+fun FXS (default: String? = null, bind: KProperty<*>? = null)  = FX<String, StringProperty>(default, bind, SimpleStringProperty::class)
+fun FXL (default: Long? = null, bind: KProperty<*>? = null)  = FX<Number, LongProperty>(default, bind, SimpleLongProperty::class)
+fun FXD (default: Double? = null, bind: KProperty<*>? = null)  = FX<Number, DoubleProperty>(default, bind, SimpleDoubleProperty::class)
+fun <V> FXO (default: V? = null, bind: KProperty<*>? = null)  = FX<V, ObjectProperty<V>>(default, bind)
+fun <V: Enum<V>> FXE (default: V? = null, bind: KProperty<*>? = null)  = FX<V, ObjectProperty<V>>(default, bind)
 
-class FXI(
-  default: Int? = null, bind: KProperty<*>? = null
-): FX<Number, IntegerProperty>(default, bind, IntegerProperty::class) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): IntegerProperty {
-	return fxProp as IntegerProperty
-  }
-}
-
-class FXS(
-  default: String? = null, bind: KProperty<*>? = null
-): FX<String, StringProperty>(default, bind, SimpleStringProperty::class) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): StringProperty {
-	return fxProp as StringProperty
-  }
-}
-
-class FXL(
-  default: Long? = null, bind: KProperty<*>? = null
-): FX<Number, LongProperty>(default, bind, SimpleLongProperty::class) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): SimpleLongProperty {
-	return fxProp as SimpleLongProperty
-  }
-}
-
-class FXD(
-  default: Double? = null, bind: KProperty<*>? = null
-): FX<Number, DoubleProperty>(default, bind, SimpleDoubleProperty::class) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): DoubleProperty {
-	return fxProp as DoubleProperty
-  }
-}
-
-class FXO<V>(
-  default: V? = null, bind: KProperty<*>? = null
-): FX<V, ObjectProperty<V>>(default, bind) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): ObjectProperty<V> {
-	return fxProp as ObjectProperty<V>
-  }
-}
-
-class FXE<V: Enum<V>>(
-  default: V? = null, bind: KProperty<*>? = null
-): FX<V, ObjectProperty<V>>(default, bind) {
-  override operator fun getValue(
-	thisRef: Any, property: KProperty<*>
-  ): ObjectProperty<V> {
-	return fxProp as ObjectProperty<V>
-  }
-}
-
-abstract class FX<V, P: ObservableValue<V>>(
+class FX<V, P: ObservableValue<V>> internal constructor(
   default: V? = null,
   val bind: KProperty<*>? = null,
-  val propClass: KClass<out Property<V>>? = null
+  private val propClass: KClass<out Property<V>>? = null
 ): FXDelegateBase() {
 
-  lateinit var thisRefVar: Any
-  lateinit var propVar: KProperty<*>
+  private lateinit var thisRefVar: Any
+  private lateinit var propVar: KProperty<*>
 
   val fxProp: Property<V> by lazy {
 	initialize(thisRefVar, propVar.name)
-	val prop = propClass?.primaryConstructor?.call(default) ?: SimpleObjectProperty<V>(default)
+
+	val prop = propClass?.let { cls ->
+	  when (default) {
+		null -> cls.constructors.first { it.parameters.isEmpty() }.run {
+		  println("calling ${this} with no params")
+		  call()
+		}
+		else -> cls.constructors.first { it.parameters.size == 1 }.run {
+		  println("calling ${this} with ${default}")
+		  call(default)
+		}
+	  }
+	} ?: run {
+	  if (default == null) {
+		println("creating SimpleObjectProperty with no args")
+		SimpleObjectProperty<V>()
+	  } else {
+		println("creating SimpleObjectProperty with $default")
+		SimpleObjectProperty<V>(default)
+	  }
+	}
 	prop.apply {
 	  bindToJsonProp(o = thisRefVar, prop = bind?.name ?: propVar.name)
 	}
@@ -144,9 +98,9 @@ abstract class FX<V, P: ObservableValue<V>>(
 	return this
   }
 
-  abstract operator fun getValue(
+  operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): P
+  ): Property<V> = fxProp
 
   override fun onChange(op: ()->Unit) {
 	fxProp.onChange {
@@ -158,17 +112,13 @@ abstract class FX<V, P: ObservableValue<V>>(
 
 fun <V> Property<V>.bindToJsonProp(o: Any, prop: String) {
   ((o as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == prop }?.d?.go { d ->
-	@Suppress("UNCHECKED_CAST") val setFun = d.setfun as ((V)->V)?
-
-	@Suppress("UNCHECKED_CAST") val getFun = d.getfun as ((V)->V)?
+	val setFun = d.setfun as ((V)->V)?
+	val getFun = d.getfun as ((V)->V)?
 	require(getFun == null) {
 	  "need more dev. getFun currently doesnt work in fx prop. would need a lot more work, powerful property delegates"
 	}
 	require(d is SuperDelegate<*, *>)
-	if (d.wasSet) {
-	  @Suppress("UNCHECKED_CAST")
-	  value = d.get() as V?
-	}
+	if (d.wasSet) value = d.get() as V?
 	var sending = false
 	onChange {
 	  sending = true
@@ -178,19 +128,12 @@ fun <V> Property<V>.bindToJsonProp(o: Any, prop: String) {
 		require(it != null) {
 		  "need more dev to specify which props are nullable (I think I did the json side but not yet the FX side)"
 		}
-		@Suppress("UNCHECKED_CAST") val s = setFun(it as V)
-		if (s != it) {
-		  value = s
-		}
+		val s = setFun(it as V)
+		if (s != it) value = s
 	  }
 	}
 	d.onChange {
-	  if (!sending) {
-		@Suppress("UNCHECKED_CAST") if (value != it as V?) { /*might have reloaded json*/
-		  @Suppress("UNCHECKED_CAST")
-		  value = it
-		}
-	  }
+	  if (!sending && value != it as V?) value = it /*might have reloaded json*/
 	}
   }
 }
@@ -211,7 +154,7 @@ class FXList<V>(
 	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperListDelegate<*, *>)
 	  if (d.wasSet) {
-		@Suppress("UNCHECKED_CAST") fxProp.setAll(d.get() as List<V>)
+		fxProp.setAll(d.get() as List<V>)
 	  }
 	  var sending = false
 	  fxProp.onChange {
@@ -222,7 +165,7 @@ class FXList<V>(
 	  d.onChange {
 		require(it is List<*>)
 		if (!sending) {
-		  @Suppress("UNCHECKED_CAST") fxProp.setAll(it as List<V>)
+		  fxProp.setAll(it as List<V>)
 		}
 	  }
 	}
@@ -231,28 +174,16 @@ class FXList<V>(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): ObservableList<V> {
-	return fxProp
+  ) = fxProp
+
+  override fun onChange(op: ()->Unit) = fxProp.onChange { op() }
+
+  fun afterChange(op: ()->Unit) = fxProp.onChange {
+	whileTrue { it.next() }
+	op()
   }
 
-  override fun onChange(op: ()->Unit) {
-	fxProp.onChange {
-	  op()
-	}
-  }
-
-  @Suppress("unused")
-  fun afterChange(op: ()->Unit) {
-	fxProp.onChange {
-	  whileTrue { it.next() }
-	  op()
-	}
-  }
-
-  @Suppress("unused")
-  fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) {
-	fxProp.listen(onAdd, onRemove)
-  }
+  fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) = fxProp.listen(onAdd, onRemove)
 
 
 }
@@ -273,7 +204,7 @@ class FXSet<V>(
 	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
 	  require(d is SuperSetDelegate<*, *>)
 	  if (d.wasSet) {
-		@Suppress("UNCHECKED_CAST") fxProp.setAll(d.get() as Set<V>)
+		fxProp.setAll(d.get() as Set<V>)
 	  }
 	  var sending = false
 	  var sendingToFxProp = false
@@ -293,9 +224,8 @@ class FXSet<V>(
 	  d.onChange {
 		require(it is Set<*>)
 		if (!sending) {
-		  @Suppress("UNCHECKED_CAST")
 		  sendingToFxProp = true
-		  @Suppress("UNCHECKED_CAST") fxProp.setAll(it as Set<V>)
+		  fxProp.setAll(it as Set<V>)
 		  sendingToFxProp = false
 		}
 	  }
@@ -306,23 +236,13 @@ class FXSet<V>(
 
   operator fun getValue(
 	thisRef: Any, property: KProperty<*>
-  ): ObservableSet<V> {
-	return fxProp
-  }
+  ) = fxProp
 
-  override fun onChange(op: ()->Unit) {
-	err(
-	  "onChange is broken for sets :( and no, you cant just listen. Issue is that the listener is run BEFORE the actual change which is not what is ever expected"
-	)
-	@Suppress("UNREACHABLE_CODE") fxProp.onChange {
-	  op()
-	}
-  }
+  override fun onChange(op: ()->Unit) = err(
+	"onChange is broken for sets :( and no, you cant just listen. Issue is that the listener is run BEFORE the actual change which is not what is ever expected"
+  )
 
-  @Suppress("unused")
   fun listen(onAdd: (V)->Unit, onRemove: (V)->Unit) {
 	fxProp.listen(onAdd, onRemove)
   }
-
-
 }
