@@ -3,6 +3,7 @@ package matt.hurricanefx.eye.delegate
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
 import javafx.beans.property.IntegerProperty
+import javafx.beans.property.IntegerPropertyBase
 import javafx.beans.property.LongProperty
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.Property
@@ -61,19 +62,18 @@ abstract class FXDelegateBase {
   abstract fun onChange(op: ()->Unit): Any
 }
 
-
 fun FXB(default: B? = null, bind: KProperty<*>? = null) = FX<B, BooleanProperty>(default, bind, BProp::class)
-fun FXI(default: I? = null, bind: KProperty<*>? = null) = FX<Num, IntegerProperty>(default, bind, IProp::class)
+fun FXI(default: I? = null, bind: KProperty<*>? = null) = FX<I, IntegerProperty>(default, bind, IProp::class)
 fun FXS(default: S? = null, bind: KProperty<*>? = null) = FX<S, StringProperty>(default, bind, SProp::class)
-fun FXL(default: L? = null, bind: KProperty<*>? = null) = FX<Num, LongProperty>(default, bind, LProp::class)
-fun FXD(default: D? = null, bind: KProperty<*>? = null) = FX<Num, DoubleProperty>(default, bind, DProp::class)
+fun FXL(default: L? = null, bind: KProperty<*>? = null) = FX<L, LongProperty>(default, bind, LProp::class)
+fun FXD(default: D? = null, bind: KProperty<*>? = null) = FX<D, DoubleProperty>(default, bind, DProp::class)
 fun <V> FXO(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
 fun <V: Enum<V>> FXE(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
 
-class FX<V, P: ObservableValue<V>> internal constructor(
+class FX<V, P: ObservableValue<*>> internal constructor(
   default: V? = null,
   val bind: KProperty<*>? = null,
-  private val propClass: KClass<out Property<V>>? = null
+  private val propClass: KClass<out Property<*>>? = null
 ): FXDelegateBase() {
 
   private lateinit var thisRefVar: Any
@@ -86,20 +86,20 @@ class FX<V, P: ObservableValue<V>> internal constructor(
 	  when (default) {
 		null -> cls.constructors.first { it.parameters.isEmpty() }.run {
 		  println("calling ${this} with no params")
-		  call()
+		  call() as Property<V>
 		}
 		else -> cls.constructors.first { it.parameters.size == 1 }.run {
 		  println("calling ${this} with ${default}")
-		  call(default)
+		  call(default) as Property<V>
 		}
 	  }
 	} ?: run {
 	  if (default == null) {
 		println("creating SimpleObjectProperty with no args")
-		SimpleObjectProperty<V>()
+		SimpleObjectProperty<V>() as Property<V>
 	  } else {
 		println("creating SimpleObjectProperty with $default")
-		SimpleObjectProperty<V>(default)
+		SimpleObjectProperty<V>(default) as Property<V>
 	  }
 	}
 	prop.apply {
