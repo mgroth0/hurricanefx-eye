@@ -27,6 +27,7 @@ import matt.klib.lang.go
 import matt.klib.lang.setAll
 import matt.klib.lang.whileTrue
 import java.util.WeakHashMap
+import kotlin.DeprecationLevel.WARNING
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -45,7 +46,8 @@ abstract class FXDelegateBase {
   abstract fun onChange(op: ()->Unit): Any
 }
 
-fun FXB (default: Boolean? = null, bind: KProperty<*>? = null)  = FX<Boolean, BooleanProperty>(default, bind, SimpleBooleanProperty::class)
+
+fun FXB (default: Boolean? = null,  bind: KProperty<*>? = null)  = FX<Boolean, BooleanProperty>(default, bind, SimpleBooleanProperty::class)
 fun FXI (default: Int? = null, bind: KProperty<*>? = null)  = FX<Number, IntegerProperty>(default, bind, SimpleIntegerProperty::class)
 fun FXS (default: String? = null, bind: KProperty<*>? = null)  = FX<String, StringProperty>(default, bind, SimpleStringProperty::class)
 fun FXL (default: Long? = null, bind: KProperty<*>? = null)  = FX<Number, LongProperty>(default, bind, SimpleLongProperty::class)
