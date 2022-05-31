@@ -14,6 +14,10 @@ import javafx.beans.property.ObjectProperty
 import javafx.beans.property.Property
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.StringProperty
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lang.BProp
 import matt.hurricanefx.eye.lang.DProp
@@ -43,12 +47,15 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
+import kotlin.reflect.jvm.isAccessible
+
 
 val Any.fxDelegates get() = FXDelegateBase.instances[this]!!
-val Any.fxBools get() = fxDelegates
-  .filterValues { it is FX<*, *> && it.observable is BooleanProperty }
-  .mapValues { (it.value as FX<*, *>).observable as BooleanProperty }
-  .values
+val Any.fxBools
+  get() = fxDelegates
+	.filterValues { it is FX<*, *> && it.observable is BooleanProperty }
+	.mapValues { (it.value as FX<*, *>).observable as BooleanProperty }
+	.values
 
 abstract class FXDelegateBase {
   companion object {
@@ -83,6 +90,7 @@ fun FXLN(default: L? = null, bind: KProperty<*>? = null) = FX<L?, ObjectProperty
 fun FXDN(default: D? = null, bind: KProperty<*>? = null) = FX<D?, ObjectProperty<D?>>(default, bind)
 fun <V> FXON(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V?>>(default, bind)
 fun <V: Enum<V>> FXEN(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V?>>(default, bind)
+
 
 class FX<V, P: Property<*>> internal constructor(
   default: V? = null,
@@ -300,6 +308,8 @@ class FXSet<V>(
   get() = access {
 	(getDelegate() as FX<V, Property<V>>)
   }.observable
+
+
 
 
 @Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = access {
