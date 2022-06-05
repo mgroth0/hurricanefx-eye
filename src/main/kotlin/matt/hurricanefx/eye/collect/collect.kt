@@ -17,7 +17,6 @@ import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import javafx.collections.SetChangeListener
-import matt.klib.str.taball
 import matt.klib.lang.setAll
 import java.lang.ref.WeakReference
 import java.util.Collections
