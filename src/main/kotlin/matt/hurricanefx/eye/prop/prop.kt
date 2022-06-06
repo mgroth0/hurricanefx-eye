@@ -812,3 +812,8 @@ fun <K, V> mapProperty(value: ObservableMap<K, V>? = null): MapProperty<K, V> = 
 fun <T> objectProperty(value: T? = null): ObjectProperty<T> = SimpleObjectProperty(value)
 fun <V> setProperty(value: ObservableSet<V>? = null): SetProperty<V> = SimpleSetProperty(value)
 fun stringProperty(value: String? = null): StringProperty = SimpleStringProperty(value)
+
+
+fun BooleanProperty.toggle() {
+  value = !value
+}
