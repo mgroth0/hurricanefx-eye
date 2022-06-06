@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package matt.hurricanefx.eye.bind
 
 import javafx.beans.binding.Bindings
