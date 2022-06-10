@@ -7,7 +7,8 @@ apis(
 )
 
 implementations(
-  projects.kj.reflect
+  projects.kj.reflect,
+  projects.kj.async
 )
 
 plugins {
