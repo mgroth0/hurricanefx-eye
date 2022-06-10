@@ -237,3 +237,26 @@ fun <E> ObservableList<E>.onChangeWithWeak(
   }
   addListener(listener)
 }
+
+
+fun <T> toStringConverter(op: (T) -> String) = object: StringConverter<T>() {
+  override fun toString(`object`: T): String {
+    return op(`object`)
+  }
+
+  override fun fromString(string: String): T {
+    TODO("Not yet implemented")
+  }
+
+}
+
+fun <T> fromStringConverter(op: (String) -> T) = object: StringConverter<T>() {
+  override fun toString(`object`: T): String {
+    TODO("Not yet implemented")
+  }
+
+  override fun fromString(string: String): T {
+    return op(string)
+  }
+
+}
