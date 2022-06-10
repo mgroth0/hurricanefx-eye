@@ -14,10 +14,6 @@ import javafx.beans.property.ObjectProperty
 import javafx.beans.property.Property
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.StringProperty
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lang.BProp
 import matt.hurricanefx.eye.lang.DProp
@@ -26,19 +22,12 @@ import matt.hurricanefx.eye.lang.LProp
 import matt.hurricanefx.eye.lang.SProp
 import matt.hurricanefx.eye.lang.listen
 import matt.hurricanefx.eye.lib.onChange
-import matt.json.custom.Json
-import matt.json.custom.JsonModel
-import matt.kjlib.delegate.SuperDelegate
-import matt.kjlib.delegate.SuperListDelegate
-import matt.kjlib.delegate.SuperSetDelegate
 import matt.klib.lang.B
 import matt.klib.lang.D
 import matt.klib.lang.I
 import matt.klib.lang.L
 import matt.klib.lang.S
 import matt.klib.lang.err
-import matt.klib.lang.go
-import matt.klib.lang.setAll
 import matt.klib.lang.whileTrue
 import matt.klib.log.warn
 import matt.reflect.access
@@ -47,7 +36,6 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 import kotlin.reflect.KProperty1
-import kotlin.reflect.jvm.isAccessible
 
 
 val Any.fxDelegates get() = FXDelegateBase.instances[this]!!
@@ -74,27 +62,26 @@ abstract class FXDelegateBase {
   abstract fun onChange(op: ()->Unit): Any
 }
 
-fun FXB(default: B? = null, bind: KProperty<*>? = null) = FX<B, BooleanProperty>(default, bind, BProp::class)
-fun FXI(default: I? = null, bind: KProperty<*>? = null) = FX<I, IntegerProperty>(default, bind, IProp::class)
-fun FXS(default: S? = null, bind: KProperty<*>? = null) = FX<S, StringProperty>(default, bind, SProp::class)
-fun FXL(default: L? = null, bind: KProperty<*>? = null) = FX<L, LongProperty>(default, bind, LProp::class)
-fun FXD(default: D? = null, bind: KProperty<*>? = null) = FX<D, DoubleProperty>(default, bind, DProp::class)
-fun <V: Any> FXO(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
-fun <V: Enum<V>> FXE(default: V? = null, bind: KProperty<*>? = null) = FX<V, ObjectProperty<V>>(default, bind)
+fun FXB(default: B? = null) = FX<B, BooleanProperty>(default, BProp::class)
+fun FXI(default: I? = null) = FX<I, IntegerProperty>(default, IProp::class)
+fun FXS(default: S? = null) = FX<S, StringProperty>(default, SProp::class)
+fun FXL(default: L? = null) = FX<L, LongProperty>(default, LProp::class)
+fun FXD(default: D? = null) = FX<D, DoubleProperty>(default, DProp::class)
+fun <V: Any> FXO(default: V? = null) = FX<V, ObjectProperty<V>>(default)
+fun <V: Enum<V>> FXE(default: V? = null) = FX<V, ObjectProperty<V>>(default)
 
 /*need to use object properties here because primitive type properties are not nullable it seems*/
-fun FXBN(default: B? = null, bind: KProperty<*>? = null) = FX<B?, ObjectProperty<B?>>(default, bind)
-fun FXIN(default: I? = null, bind: KProperty<*>? = null) = FX<I?, ObjectProperty<I?>>(default, bind)
-fun FXSN(default: S? = null, bind: KProperty<*>? = null) = FX<S?, ObjectProperty<S?>>(default, bind)
-fun FXLN(default: L? = null, bind: KProperty<*>? = null) = FX<L?, ObjectProperty<L?>>(default, bind)
-fun FXDN(default: D? = null, bind: KProperty<*>? = null) = FX<D?, ObjectProperty<D?>>(default, bind)
-fun <V> FXON(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V?>>(default, bind)
-fun <V: Enum<V>> FXEN(default: V? = null, bind: KProperty<*>? = null) = FX<V?, ObjectProperty<V?>>(default, bind)
+fun FXBN(default: B? = null) = FX<B?, ObjectProperty<B?>>(default)
+fun FXIN(default: I? = null) = FX<I?, ObjectProperty<I?>>(default)
+fun FXSN(default: S? = null) = FX<S?, ObjectProperty<S?>>(default)
+fun FXLN(default: L? = null) = FX<L?, ObjectProperty<L?>>(default)
+fun FXDN(default: D? = null) = FX<D?, ObjectProperty<D?>>(default)
+fun <V> FXON(default: V? = null) = FX<V?, ObjectProperty<V?>>(default)
+fun <V: Enum<V>> FXEN(default: V? = null) = FX<V?, ObjectProperty<V?>>(default)
 
 
 class FX<V, P: Property<*>> internal constructor(
   default: V? = null,
-  val bind: KProperty<*>? = null,
   private val propClass: KClass<out Property<*>>? = null
 ): FXDelegateBase() {
 
@@ -126,12 +113,7 @@ class FX<V, P: Property<*>> internal constructor(
 		SimpleObjectProperty<V>(thisRefVar, propVar.name, default) as P
 	  }
 	}
-	if (bind != null) {
-	  err("no")
-	}
-	prop.apply {
-	  bindToJsonProp(o = thisRefVar, prop = bind?.name ?: propVar.name)
-	}
+	prop
   }
 
   operator fun provideDelegate(
@@ -163,33 +145,6 @@ class FX<V, P: Property<*>> internal constructor(
 }
 
 
-fun <V> Property<V>.bindToJsonProp(o: Any, prop: String) {
-  ((o as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == prop }?.d?.go { d ->
-	val setFun = d.setfun as ((V)->V)?
-	val getFun = d.getfun as ((V)->V)?
-	require(getFun == null) {
-	  "need more dev. getFun currently doesnt work in fx prop. would need a lot more work, powerful property delegates"
-	}
-	require(d is SuperDelegate<*, *>)
-	if (d.wasSet) value = d.get() as V?
-	var sending = false
-	onChange {
-	  sending = true
-	  d.set(it)
-	  sending = false
-	  if (setFun != null) {
-		require(it != null) {
-		  "need more dev to specify which props are nullable (I think I did the json side but not yet the FX side)"
-		}
-		val s = setFun(it as V)
-		if (s != it) value = s
-	  }
-	}
-	d.onChange {
-	  if (!sending && value != it as V?) value = it /*might have reloaded json*/
-	}
-  }
-}
 
 
 class FXList<V>(
@@ -204,28 +159,6 @@ class FXList<V>(
 	thisRef: Any, prop: KProperty<*>
   ): FXList<V> {
 	initialize(thisRef, prop.name)
-	val search = bind?.name ?: prop.name
-	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
-	  require(
-		d.setfun == null && d.getfun == null
-	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
-	  require(d is SuperListDelegate<*, *>)
-	  if (d.wasSet) {
-		observable.setAll(d.get() as List<V>)
-	  }
-	  var sending = false
-	  observable.onChange {
-		sending = true
-		d.setAll(observable.toList())
-		sending = false
-	  }
-	  d.onChange {
-		require(it is List<*>)
-		if (!sending) {
-		  observable.setAll(it as List<V>)
-		}
-	  }
-	}
 	return this
   }
 
@@ -254,40 +187,6 @@ class FXSet<V>(
 	thisRef: Any, prop: KProperty<*>
   ): FXSet<V> {
 	initialize(thisRef, prop.name)
-	val search = bind?.name ?: prop.name
-	((thisRef as? Json<*>)?.json as? JsonModel)?.props?.firstOrNull { it.key == search }?.d?.go { d ->
-	  require(
-		d.setfun == null && d.getfun == null
-	  ) { "would need more dev and to specify if I'm setting the elements or the list" }
-	  require(d is SuperSetDelegate<*, *>)
-	  if (d.wasSet) {
-		observable.setAll(d.get() as Set<V>)
-	  }
-	  var sending = false
-	  var sendingToFxProp = false
-	  observable.listen(onAdd = {
-		if (!sendingToFxProp) {
-		  sending = true
-		  d.add(it)
-		  sending = false
-		}
-	  }, onRemove = {
-		if (!sendingToFxProp) {
-		  sending = true
-		  d.remove(it)
-		  sending = false
-		}
-	  })
-	  d.onChange {
-		require(it is Set<*>)
-		if (!sending) {
-		  sendingToFxProp = true
-		  observable.setAll(it as Set<V>)
-		  sendingToFxProp = false
-		}
-	  }
-
-	}
 	return this
   }
 
