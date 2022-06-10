@@ -239,8 +239,8 @@ fun <E> ObservableList<E>.onChangeWithWeak(
 }
 
 
-fun <T> toStringConverter(op: (T) -> String) = object: StringConverter<T>() {
-  override fun toString(`object`: T): String {
+fun <T> toStringConverter(op: (T?) -> String) = object: StringConverter<T>() {
+  override fun toString(`object`: T?): String {
     return op(`object`)
   }
 
