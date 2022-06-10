@@ -8,7 +8,8 @@ apis(
 
 implementations(
   projects.kj.reflect,
-  projects.kj.async
+  projects.kj.async,
+  projects.kj.kjlib
 )
 
 plugins {
