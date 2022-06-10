@@ -16,6 +16,7 @@ import javafx.beans.value.ObservableValue
 import javafx.beans.value.WeakChangeListener
 import javafx.beans.value.WritableValue
 import javafx.collections.FXCollections
+import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.util.StringConverter
 import javafx.util.converter.BigDecimalStringConverter
@@ -32,6 +33,7 @@ import javafx.util.converter.LongStringConverter
 import javafx.util.converter.NumberStringConverter
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lib.onChange
+import java.lang.ref.WeakReference
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.Format
@@ -213,4 +215,25 @@ fun <T> ObservableValue<T>.selectBoolean(nested: (T) -> BooleanExpression): Bool
 
   }
 
+}
+
+
+
+fun <E> ObservableList<E>.onChangeWithWeak(
+  o: Any, op: ()->Unit
+) = apply {
+
+  var listener: ListChangeListener<E>? = null
+  val weakRef = WeakReference(o)
+  listener = ListChangeListener {
+    if (weakRef.get() == null) {
+      removeListener(listener!!)
+    }
+
+    while (it.next()) {    /*"ListChangeListener.Change requires you to call next() before the other methods"*/
+    }
+    op()
+
+  }
+  addListener(listener)
 }
