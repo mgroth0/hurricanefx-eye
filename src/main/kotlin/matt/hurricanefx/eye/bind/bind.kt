@@ -78,6 +78,11 @@ fun <T> Property<T>.internalBind(property: ObservableValue<T>, readonly: Boolean
 
 
 
+
+
+
+
+
 inline fun <reified S : T, reified T : Any> bindStringProperty(
   stringProperty: StringProperty,
   converter: StringConverter<T>?,
@@ -115,16 +120,16 @@ inline fun <reified T : Any> getDefaultConverter() = when (T::class.javaPrimitiv
   Int::class.javaPrimitiveType -> IntegerStringConverter()
   Long::class.javaPrimitiveType -> LongStringConverter()
   Double::class.javaPrimitiveType -> DoubleStringConverter()
-  Float::class.javaPrimitiveType   -> FloatStringConverter()
-  Date::class                      -> DateStringConverter()
-  BigDecimal::class                -> BigDecimalStringConverter()
-  BigInteger::class                -> BigIntegerStringConverter()
-  Number::class                    -> NumberStringConverter()
-  LocalDate::class                 -> LocalDateStringConverter()
-  LocalTime::class                 -> LocalTimeStringConverter()
-  LocalDateTime::class             -> LocalDateTimeStringConverter()
+  Float::class.javaPrimitiveType -> FloatStringConverter()
+  Date::class -> DateStringConverter()
+  BigDecimal::class -> BigDecimalStringConverter()
+  BigInteger::class -> BigIntegerStringConverter()
+  Number::class -> NumberStringConverter()
+  LocalDate::class -> LocalDateStringConverter()
+  LocalTime::class -> LocalTimeStringConverter()
+  LocalDateTime::class -> LocalDateTimeStringConverter()
   Boolean::class.javaPrimitiveType -> BooleanStringConverter()
-  else                             -> null
+  else -> null
 } as StringConverter<T>?
 
 fun ObservableValue<Boolean>.toBinding() = object : BooleanBinding() {
