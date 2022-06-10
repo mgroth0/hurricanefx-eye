@@ -1,11 +1,14 @@
 modtype = LIB
 
-dependencies {
-  api(libs.fx.base)
-  api(projects.kj.json)
-  api(libs.kotlinx.serialization.json)
-  implementation(projects.kj.reflect)
-}
+apis(
+  libs.fx.base,
+  libs.kotlinx.serialization.json,
+  projects.kj.json
+)
+
+implementations(
+  projects.kj.reflect
+)
 
 plugins {
   kotlin("plugin.serialization")
