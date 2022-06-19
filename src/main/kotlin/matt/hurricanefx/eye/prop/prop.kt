@@ -716,9 +716,9 @@ fun <T: Any> booleanBinding(receiver: T, vararg dependencies: Observable, op: T.
 	Bindings.createBooleanBinding(Callable { receiver.op() }, *createObservableArray(receiver, *dependencies))
 
 /**
- * A Boolean binding that tracks all items in an observable list and create an observable boolean
+ * A Boolean matt.klib.bind.binding that tracks all items in an observable list and create an observable boolean
  * value by anding together an observable boolean representing each element in the observable list.
- * Whenever the list changes, the binding is updated as well
+ * Whenever the list changes, the matt.klib.bind.binding is updated as well
  */
 fun <T: Any> booleanListBinding(
   list: ObservableList<T>,

@@ -151,7 +151,7 @@ class SortedFilteredList<T>(
 
   /**
    * Force the filtered list to refilter it's items based on the current predicate without having to configure a new predicate.
-   * Avoid reassigning the property value as that would impede binding.
+   * Avoid reassigning the property value as that would impede matt.klib.bind.binding.
    */
   fun refilter() {
 	val p = predicate
