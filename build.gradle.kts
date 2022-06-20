@@ -8,7 +8,7 @@ apis(
 
 implementations(
   projects.kj.reflect,
-  projects.kj.async,
+  projects.k.async,
   projects.kj.kjlib
 )
 
