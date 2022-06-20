@@ -3,13 +3,13 @@ modtype = LIB
 apis(
   libs.fx.base,
   libs.kotlinx.serialization.json,
-  projects.kj.json
+  projects.k.json
 )
 
 implementations(
-  projects.kj.reflect,
+  projects.k.reflect,
   projects.k.async,
-  projects.kj.kjlib
+  projects.k.kjlib
 )
 
 plugins {
