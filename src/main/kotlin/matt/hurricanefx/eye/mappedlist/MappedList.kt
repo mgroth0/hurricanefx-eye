@@ -3,14 +3,15 @@ package matt.hurricanefx.eye.mappedlist
 
 import javafx.beans.InvalidationListener
 import javafx.collections.ListChangeListener
+import javafx.collections.MapChangeListener
 import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
+import matt.hurricanefx.eye.collect.observableMapOf
 import matt.hurricanefx.eye.collect.toObservable
 import matt.hurricanefx.eye.lib.onChange
 import matt.klib.lang.NEVER
 
 fun <O, E> ObservableList<O>.toMappedList(mapfun: (O)->E) = MappedList(this, mapfun)
-
-
 
 
 class MappedList<O, E>(
@@ -167,5 +168,31 @@ class ReadOnlyMutableIterator<E>(private val itr: MutableIterator<E>): MutableIt
   override fun remove() {
 	NEVER
   }
+
+}
+
+fun <O, K> ObservableList<O>.toMappedMap(keySelectorFun: (O)->K) = MappedMap(this, keySelectorFun)
+
+class MappedMap<O, K>(
+  sourceList: ObservableList<O>,
+  keySelectorFun: (O)->K,
+  map: MutableMap<K, O> = mutableMapOf()
+): Map<K, O> by map {
+
+  init {
+	map.clear()
+	map.putAll(sourceList.associateBy(keySelectorFun))
+
+	sourceList.onChange {
+	  while (it.next()) {
+		map.putAll(it.addedSubList.associateBy(keySelectorFun))
+		it.removed.forEach {
+		  map.remove(keySelectorFun(it))
+		}
+	  }
+	}
+
+  }
+
 
 }

@@ -30,6 +30,7 @@ import matt.klib.lang.S
 import matt.klib.lang.err
 import matt.klib.lang.whileTrue
 import matt.klib.log.warn
+import matt.klib.log.warnOnce
 import matt.reflect.access
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
@@ -62,27 +63,34 @@ abstract class FXDelegateBase {
   abstract fun onChange(op: ()->Unit): Any
 }
 
-fun FXB(default: B? = null) = FX<B, BooleanProperty>(default, BProp::class)
-fun FXI(default: I? = null) = FX<I, IntegerProperty>(default, IProp::class)
-fun FXS(default: S? = null) = FX<S, StringProperty>(default, SProp::class)
-fun FXL(default: L? = null) = FX<L, LongProperty>(default, LProp::class)
-fun FXD(default: D? = null) = FX<D, DoubleProperty>(default, DProp::class)
-fun <V: Any> FXO(default: V? = null) = FX<V, ObjectProperty<V>>(default)
-fun <V: Enum<V>> FXE(default: V? = null) = FX<V, ObjectProperty<V>>(default)
+fun FXB(default: B? = null, listener: ((B)->Unit)? = null) = FX<B, BooleanProperty>(default, BProp::class, listener)
+fun FXI(default: I? = null, listener: ((I)->Unit)? = null) = FX<I, IntegerProperty>(default, IProp::class, listener)
+fun FXS(default: S? = null, listener: ((S)->Unit)? = null) = FX<S, StringProperty>(default, SProp::class, listener)
+fun FXL(default: L? = null, listener: ((L)->Unit)? = null) = FX<L, LongProperty>(default, LProp::class, listener)
+fun FXD(default: D? = null, listener: ((D)->Unit)? = null) = FX<D, DoubleProperty>(default, DProp::class, listener)
+fun <V: Any> FXO(default: V? = null, listener: ((V)->Unit)? = null) =
+  FX<V, ObjectProperty<V>>(default, listener = listener)
+
+fun <V: Enum<V>> FXE(default: V? = null, listener: ((V)->Unit)? = null) =
+  FX<V, ObjectProperty<V>>(default, listener = listener)
 
 /*need to use object properties here because primitive type properties are not nullable it seems*/
-fun FXBN(default: B? = null) = FX<B?, ObjectProperty<B?>>(default)
-fun FXIN(default: I? = null) = FX<I?, ObjectProperty<I?>>(default)
-fun FXSN(default: S? = null) = FX<S?, ObjectProperty<S?>>(default)
-fun FXLN(default: L? = null) = FX<L?, ObjectProperty<L?>>(default)
-fun FXDN(default: D? = null) = FX<D?, ObjectProperty<D?>>(default)
-fun <V> FXON(default: V? = null) = FX<V?, ObjectProperty<V?>>(default)
-fun <V: Enum<V>> FXEN(default: V? = null) = FX<V?, ObjectProperty<V?>>(default)
+fun FXBN(default: B? = null, listener: ((B?)->Unit)? = null) = FX<B?, ObjectProperty<B?>>(default, listener = listener)
+fun FXIN(default: I? = null, listener: ((I?)->Unit)? = null) = FX<I?, ObjectProperty<I?>>(default, listener = listener)
+fun FXSN(default: S? = null, listener: ((S?)->Unit)? = null) = FX<S?, ObjectProperty<S?>>(default, listener = listener)
+fun FXLN(default: L? = null, listener: ((L?)->Unit)? = null) = FX<L?, ObjectProperty<L?>>(default, listener = listener)
+fun FXDN(default: D? = null, listener: ((D?)->Unit)? = null) = FX<D?, ObjectProperty<D?>>(default, listener = listener)
+fun <V> FXON(default: V? = null, listener: ((V?)->Unit)? = null) =
+  FX<V?, ObjectProperty<V?>>(default, listener = listener)
+
+fun <V: Enum<V>> FXEN(default: V? = null, listener: ((V?)->Unit)? = null) =
+  FX<V?, ObjectProperty<V?>>(default, listener = listener)
 
 
 class FX<V, P: Property<*>> internal constructor(
   default: V? = null,
-  private val propClass: KClass<out Property<*>>? = null
+  private val propClass: KClass<out Property<*>>? = null,
+  listener: ((V)->Unit)? = null
 ): FXDelegateBase() {
 
   private lateinit var thisRefVar: Any
@@ -97,6 +105,7 @@ class FX<V, P: Property<*>> internal constructor(
 		  @Suppress("UNCHECKED_CAST")
 		  call(thisRefVar, propVar.name) as P
 		}
+
 		else -> cls.constructors.first { it.parameters.size == 3 }.run {
 		  @Suppress("UNCHECKED_CAST")
 		  call(thisRefVar, propVar.name, default) as P
@@ -104,13 +113,16 @@ class FX<V, P: Property<*>> internal constructor(
 	  }
 	} ?: run {
 	  if (default == null) {
-		println("creating SimpleObjectProperty with no args")
 		@Suppress("UNCHECKED_CAST")
 		SimpleObjectProperty<V>(thisRefVar, propVar.name) as P
 	  } else {
-		println("creating SimpleObjectProperty with $default")
 		@Suppress("UNCHECKED_CAST")
 		SimpleObjectProperty<V>(thisRefVar, propVar.name, default) as P
+	  }
+	}
+	if (listener != null) {
+	  prop.onChange {
+		listener(it as V)
 	  }
 	}
 	prop
@@ -145,13 +157,11 @@ class FX<V, P: Property<*>> internal constructor(
 }
 
 
-
-
 class FXList<V>(
-  vararg default: V, val bind: KProperty<*>? = null
+  vararg default: V, val bind: KProperty<*>? = null, val listener: (()->Unit)? = null
 ): FXDelegateBase() {
   init {
-	warn("does this have to a by? can it not just be a regular val instead of a property delegate?")
+	warnOnce("does this have to a by? can it not just be a regular val instead of a property delegate?")
   }
 
   override val observable = default.toList().toObservable()
@@ -159,6 +169,9 @@ class FXList<V>(
 	thisRef: Any, prop: KProperty<*>
   ): FXList<V> {
 	initialize(thisRef, prop.name)
+	onChange {
+	  listener?.invoke()
+	}
 	return this
   }
 
@@ -207,8 +220,6 @@ class FXSet<V>(
   get() = access {
 	(getDelegate() as FX<V, Property<V>>)
   }.observable
-
-
 
 
 @Suppress("UNCHECKED_CAST") fun <T, V> KProperty1<T, V>.fx(t: T) = access {
