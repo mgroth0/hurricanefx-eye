@@ -2,7 +2,7 @@ package matt.hurricanefx.eye.format
 
 import javafx.util.StringConverter
 import matt.async.date.formatDate
-import matt.kjlib.byte.ByteSize
+import matt.klib.byte.ByteSize
 import matt.klib.lang.NEVER
 import java.util.Date
 
