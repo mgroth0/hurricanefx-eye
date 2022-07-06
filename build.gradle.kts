@@ -1,4 +1,3 @@
-modtype = LIB
 
 apis(
   libs.fx.base,
